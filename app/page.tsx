@@ -13,8 +13,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import * as Diff from "diff";
 import { Copy, Download, FileText, GitCompare } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { nanoid } from "nanoid";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 type DiffLine = {
   type: "+" | "-" | " ";
@@ -40,8 +45,6 @@ function computeDiff(originalText: string, modifiedText: string) {
 }
 
 export default function TextDiffApp() {
-  const [activeTab, setActiveTab] = useState("input");
-
   const [originalText, setOriginalText] = useState("");
   const [modifiedText, setModifiedText] = useState("");
 
@@ -50,15 +53,14 @@ export default function TextDiffApp() {
     .map((line) => `${line.type} ${line.text}`)
     .join("\n");
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-  };
-
   const handleCompare = () => {
     const diff = computeDiff(originalText, modifiedText);
     setDiffResult(diff);
-    setActiveTab("diff");
   };
+
+  useEffect(() => {
+    handleCompare();
+  }, [originalText, modifiedText]);
 
   const handleCopyDiff = () => {
     navigator.clipboard.writeText(diffText);
@@ -79,101 +81,74 @@ export default function TextDiffApp() {
   };
 
   return (
-    <div className="container mx-auto py-8 max-w-6xl">
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <GitCompare className="h-6 w-6" />
+    <div className="mx-auto p-6 max-w-full h-dvh">
+      <Card className="h-full flex flex-col">
+        <CardHeader className="p-3 flex-row justify-between border-b border-secondary">
+          <CardTitle className="text-md font-medium flex items-center gap-2">
+            <GitCompare className="h-4 w-4" />
             Text Diff Viewer
           </CardTitle>
-          <CardDescription>
-            Compare two texts and see the differences highlighted similar to
-            GitHub
-          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Tabs
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="input" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Input Text
-              </TabsTrigger>
-              <TabsTrigger value="diff" className="flex items-center gap-2">
-                <GitCompare className="h-4 w-4" />
-                View Differences
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="input" className="mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Original Text</h3>
-                  <Textarea
-                    placeholder="Paste original text here..."
-                    className="min-h-[300px] font-mono"
-                    value={originalText}
-                    onChange={(e) => setOriginalText(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Modified Text</h3>
-                  <Textarea
-                    placeholder="Paste modified text here..."
-                    className="min-h-[300px] font-mono"
-                    value={modifiedText}
-                    onChange={(e) => setModifiedText(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="mt-4 flex justify-end">
-                <Button onClick={handleCompare}>
-                  <GitCompare className="mr-2 h-4 w-4" />
-                  Compare Texts
+        <CardContent className="flex-1 p-0">
+          <ResizablePanelGroup direction="horizontal">
+            <ResizablePanel>
+              <Textarea
+                placeholder="Original text here..."
+                className="border-none font-mono resize-none h-full rounded-none"
+                value={originalText}
+                onChange={(e) => setOriginalText(e.target.value)}
+              />
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel>
+              <Textarea
+                placeholder="Modified text here..."
+                className="border-none font-mono resize-none h-full rounded-none"
+                value={modifiedText}
+                onChange={(e) => setModifiedText(e.target.value)}
+              />
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel className="bg-neutral-900 relative group">
+              <div className="absolute top-0 right-0 z-10 flex gap-2 p-2">
+                <Button
+                  variant="secondary"
+                  className="p-3 opacity-0 focus-visible::opacity-100 group-hover:opacity-100 transition-opacity"
+                  onClick={handleCopyDiff}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="p-3 opacity-0 focus-visible::opacity-100 group-hover:opacity-100 transition-opacity"
+                  onClick={handleDownloadDiff}
+                >
+                  <Download className="h-4 w-4" />
                 </Button>
               </div>
-            </TabsContent>
-            <TabsContent value="diff" className="mt-4">
-              <div className="border rounded-md overflow-hidden">
-                {diffResult.length === 0 ? (
-                  <div className="h-[500px] flex items-center justify-center text-muted-foreground">
-                    No differences found or no text to compare
-                  </div>
-                ) : (
-                  <div className="h-[500px] overflow-auto p-4 font-mono text-sm bg-muted">
-                    <pre className="relative w-full">
-                      {diffResult.map((line) => (
-                        <div
-                          className={cn(
-                            line.type === "+" && "bg-green-950 text-green-100",
-                            line.type === "-" && "bg-red-950 text-red-100"
-                          )}
-                          key={line.id}
-                        >
-                          {line.type} {line.text}
-                        </div>
-                      ))}
-                    </pre>
-                  </div>
+              <div className="absolute inset-0 overflow-auto py-2">
+                {diffResult.length === 0 && (
+                  <p className="text-sm text-muted-foreground font-mono h-full flex items-center justify-center">
+                    No text to compare
+                  </p>
                 )}
+                <pre className="md:text-sm px-2">
+                  {diffResult.map((line) => (
+                    <div
+                      className={cn(
+                        "w-fit",
+                        line.type === "+" && "bg-green-950 text-green-100",
+                        line.type === "-" && "bg-red-950 text-red-100"
+                      )}
+                      key={line.id}
+                    >
+                      {line.type} {line.text}
+                    </div>
+                  ))}
+                </pre>
               </div>
-              <div className="mt-4 flex justify-end gap-2">
-                <Button variant="outline" onClick={handleCopyDiff}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copy Diff
-                </Button>
-                <Button variant="outline" onClick={handleDownloadDiff}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Diff
-                </Button>
-                <Button onClick={() => setActiveTab("input")}>
-                  Back to Input
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </CardContent>
       </Card>
     </div>
