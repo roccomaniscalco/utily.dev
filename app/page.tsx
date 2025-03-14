@@ -82,7 +82,7 @@ export default function TextDiffApp() {
 
   return (
     <div className="mx-auto p-6 max-w-full h-dvh">
-      <Card className="h-full flex flex-col">
+      <Card className="h-full flex flex-col overflow-hidden">
         <CardHeader className="p-3 flex-row justify-between border-b border-secondary">
           <CardTitle className="text-md font-medium flex items-center gap-2">
             <GitCompare className="h-4 w-4" />
@@ -109,34 +109,34 @@ export default function TextDiffApp() {
               />
             </ResizablePanel>
             <ResizableHandle />
-            <ResizablePanel className="bg-neutral-900 relative group">
+            <ResizablePanel className="bg-neutral-900/50 relative group">
               <div className="absolute top-0 right-0 z-10 flex gap-2 p-2">
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   className="p-3 opacity-0 focus-visible::opacity-100 group-hover:opacity-100 transition-opacity"
                   onClick={handleCopyDiff}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   className="p-3 opacity-0 focus-visible::opacity-100 group-hover:opacity-100 transition-opacity"
                   onClick={handleDownloadDiff}
                 >
                   <Download className="h-4 w-4" />
                 </Button>
               </div>
-              <div className="absolute inset-0 overflow-auto py-2">
+              <div className="absolute inset-0 overflow-auto">
                 {diffResult.length === 0 && (
                   <p className="text-sm text-muted-foreground font-mono h-full flex items-center justify-center">
                     No text to compare
                   </p>
                 )}
-                <pre className="md:text-sm px-2">
+                <pre className="md:text-sm py-2">
                   {diffResult.map((line) => (
                     <div
                       className={cn(
-                        "w-fit",
+                        "w-fit px-2 min-w-full",
                         line.type === "+" && "bg-green-950 text-green-100",
                         line.type === "-" && "bg-red-950 text-red-100"
                       )}
