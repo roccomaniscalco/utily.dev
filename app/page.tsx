@@ -1,132 +1,82 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import { FileText, GitCompare, Copy, Download } from "lucide-react"
-import * as Diff from "diff"
-import { useVirtualizer } from "@tanstack/react-virtual"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import * as Diff from "diff";
+import { Copy, Download, FileText, GitCompare } from "lucide-react";
+import { useState } from "react";
+import { nanoid } from "nanoid";
+
+type DiffLine = {
+  type: "+" | "-" | " ";
+  text: string;
+  id: string;
+};
 
 // Using the diff library to compute differences
-function computeDiff(oldText: string, newText: string) {
-  // Use diffLines from the diff library
-  const diffResult = Diff.diffLines(oldText, newText)
-
-  // Convert the diff library format to our format
-  return diffResult
+function computeDiff(originalText: string, modifiedText: string) {
+  const diff = Diff.diffLines(originalText, modifiedText);
+  return diff
     .map((part) => ({
-      type: part.added ? "added" : part.removed ? "removed" : "same",
-      // Split the text into lines to maintain our line-by-line display
+      type: part.added ? "+" : part.removed ? "-" : (" " as DiffLine["type"]),
       lines: part.value.replace(/\n$/, "").split("\n"),
     }))
     .flatMap((part) =>
-      // Create an entry for each line
       part.lines.map((line) => ({
+        id: nanoid(),
         type: part.type,
         text: line,
-      })),
-    )
+      }))
+    );
 }
 
 export default function TextDiffApp() {
-  const [originalText, setOriginalText] = useState(
-    "This is a test.\nIt has multiple lines.\nSome lines will be changed.\nOthers will stay the same.",
-  )
-  const [modifiedText, setModifiedText] = useState(
-    "This is a test.\nIt has several lines.\nSome lines will be modified.\nOthers will stay the same.\nAnd here's a new line.",
-  )
-  const [diffResult, setDiffResult] = useState<Array<{ type: string; text: string }>>([])
-  const [activeTab, setActiveTab] = useState("input")
-  const [diffCalculated, setDiffCalculated] = useState(false)
+  const [activeTab, setActiveTab] = useState("input");
 
-  // Reference to the scrollable container
-  const parentRef = useRef<HTMLDivElement>(null)
+  const [originalText, setOriginalText] = useState("");
+  const [modifiedText, setModifiedText] = useState("");
 
-  // Create a virtualizer
-  const rowVirtualizer = useVirtualizer({
-    count: diffResult.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 24, // Estimated height of each row in pixels
-    overscan: 5, // Number of items to render before and after the visible area
-  })
-
-  // Calculate diff on initial load
-  useEffect(() => {
-    const diff = computeDiff(originalText, modifiedText)
-    setDiffResult(diff)
-    setDiffCalculated(true)
-  }, [])
-
-  // Force virtualizer to recalculate when tab changes or diff result changes
-  useEffect(() => {
-    if (activeTab === "diff" && parentRef.current) {
-      // Force a recalculation of the virtualizer
-      rowVirtualizer.measure()
-    }
-  }, [activeTab, diffResult, rowVirtualizer])
+  const [diffResult, setDiffResult] = useState<DiffLine[]>([]);
+  const diffText = diffResult
+    .map((line) => `${line.type} ${line.text}`)
+    .join("\n");
 
   const handleTabChange = (value: string) => {
-    // If switching to diff tab, make sure diff is calculated
-    if (value === "diff" && !diffCalculated) {
-      const diff = computeDiff(originalText, modifiedText)
-      setDiffResult(diff)
-      setDiffCalculated(true)
-    }
-    setActiveTab(value)
-  }
+    setActiveTab(value);
+  };
 
   const handleCompare = () => {
-    console.log("Computing diff...")
-    const diff = computeDiff(originalText, modifiedText)
-    console.log(`Diff result has ${diff.length} items`)
-    setDiffResult(diff)
-    setDiffCalculated(true)
-    setActiveTab("diff")
-
-    // Schedule a measurement after the state updates
-    setTimeout(() => {
-      if (parentRef.current) {
-        rowVirtualizer.measure()
-      }
-    }, 0)
-  }
+    const diff = computeDiff(originalText, modifiedText);
+    setDiffResult(diff);
+    setActiveTab("diff");
+  };
 
   const handleCopyDiff = () => {
-    const diffText = diffResult
-      .map((line) => {
-        const prefix = line.type === "added" ? "+ " : line.type === "removed" ? "- " : "  "
-        return prefix + line.text
-      })
-      .join("\n")
-
-    navigator.clipboard
-      .writeText(diffText)
-      .then(() => alert("Diff copied to clipboard"))
-      .catch((err) => console.error("Failed to copy: ", err))
-  }
+    navigator.clipboard.writeText(diffText);
+  };
 
   const handleDownloadDiff = () => {
-    const diffText = diffResult
-      .map((line) => {
-        const prefix = line.type === "added" ? "+ " : line.type === "removed" ? "- " : "  "
-        return prefix + line.text
-      })
-      .join("\n")
+    const blob = new Blob([diffText], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
 
-    const blob = new Blob([diffText], { type: "text/plain" })
-    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "text-diff.txt";
+    document.body.appendChild(a);
+    a.click();
 
-    const a = document.createElement("a")
-    a.href = url
-    a.download = "text-diff.txt"
-    document.body.appendChild(a)
-    a.click()
-
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="container mx-auto py-8 max-w-6xl">
@@ -136,10 +86,17 @@ export default function TextDiffApp() {
             <GitCompare className="h-6 w-6" />
             Text Diff Viewer
           </CardTitle>
-          <CardDescription>Compare two texts and see the differences highlighted similar to GitHub</CardDescription>
+          <CardDescription>
+            Compare two texts and see the differences highlighted similar to
+            GitHub
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="input" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -158,10 +115,7 @@ export default function TextDiffApp() {
                     placeholder="Paste original text here..."
                     className="min-h-[300px] font-mono"
                     value={originalText}
-                    onChange={(e) => {
-                      setOriginalText(e.target.value)
-                      setDiffCalculated(false)
-                    }}
+                    onChange={(e) => setOriginalText(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -170,10 +124,7 @@ export default function TextDiffApp() {
                     placeholder="Paste modified text here..."
                     className="min-h-[300px] font-mono"
                     value={modifiedText}
-                    onChange={(e) => {
-                      setModifiedText(e.target.value)
-                      setDiffCalculated(false)
-                    }}
+                    onChange={(e) => setModifiedText(e.target.value)}
                   />
                 </div>
               </div>
@@ -191,42 +142,20 @@ export default function TextDiffApp() {
                     No differences found or no text to compare
                   </div>
                 ) : (
-                  <div ref={parentRef} className="h-[500px] overflow-auto p-4 font-mono text-sm bg-muted">
-                    {/* Total size container */}
-                    <div
-                      style={{
-                        height: `${rowVirtualizer.getTotalSize()}px`,
-                        width: "100%",
-                        position: "relative",
-                      }}
-                    >
-                      {/* Virtualized items */}
-                      {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                        const line = diffResult[virtualRow.index]
-                        return (
-                          <div
-                            key={virtualRow.index}
-                            data-index={virtualRow.index}
-                            className={`absolute left-0 w-full py-1 ${
-                              line.type === "added"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                : line.type === "removed"
-                                  ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                                  : ""
-                            }`}
-                            style={{
-                              height: `${virtualRow.size}px`,
-                              transform: `translateY(${virtualRow.start}px)`,
-                            }}
-                          >
-                            <span className="inline-block w-6 text-muted-foreground">
-                              {line.type === "added" ? "+" : line.type === "removed" ? "-" : " "}
-                            </span>
-                            <span className="whitespace-pre-wrap">{line.text}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
+                  <div className="h-[500px] overflow-auto p-4 font-mono text-sm bg-muted">
+                    <pre className="relative w-full">
+                      {diffResult.map((line) => (
+                        <div
+                          className={cn(
+                            line.type === "+" && "bg-green-950 text-green-100",
+                            line.type === "-" && "bg-red-950 text-red-100"
+                          )}
+                          key={line.id}
+                        >
+                          {line.type} {line.text}
+                        </div>
+                      ))}
+                    </pre>
                   </div>
                 )}
               </div>
@@ -239,13 +168,14 @@ export default function TextDiffApp() {
                   <Download className="mr-2 h-4 w-4" />
                   Download Diff
                 </Button>
-                <Button onClick={() => setActiveTab("input")}>Back to Input</Button>
+                <Button onClick={() => setActiveTab("input")}>
+                  Back to Input
+                </Button>
               </div>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-
