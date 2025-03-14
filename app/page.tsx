@@ -1,25 +1,18 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import * as Diff from "diff";
-import { Copy, Download, FileText, GitCompare } from "lucide-react";
-import { useEffect, useState } from "react";
-import { nanoid } from "nanoid";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import * as Diff from "diff";
+import { Copy, Download, GitCompare } from "lucide-react";
+import { nanoid } from "nanoid";
+import { useEffect, useState } from "react";
 
 type DiffLine = {
   type: "+" | "-" | " ";
@@ -86,7 +79,7 @@ export default function TextDiffApp() {
         <CardHeader className="p-3 flex-row justify-between border-b border-secondary">
           <CardTitle className="text-md font-medium flex items-center gap-2">
             <GitCompare className="h-4 w-4" />
-            Text Diff Viewer
+            Diff Viewer
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 p-0">
@@ -132,11 +125,11 @@ export default function TextDiffApp() {
                     No text to compare
                   </p>
                 )}
-                <pre className="md:text-sm py-2">
+                <pre className="md:text-sm py-2 w-fit min-w-full">
                   {diffResult.map((line) => (
                     <div
                       className={cn(
-                        "w-fit px-2 min-w-full",
+                        "px-2",
                         line.type === "+" && "bg-green-950 text-green-100",
                         line.type === "-" && "bg-red-950 text-red-100"
                       )}
