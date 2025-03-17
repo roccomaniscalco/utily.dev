@@ -118,4 +118,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  .dot {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    width: 100%;
+    background-image: radial-gradient(var(--muted) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
 }

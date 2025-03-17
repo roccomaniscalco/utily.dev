@@ -1,7 +1,13 @@
 'use client'
 
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '~/components/ui/card'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -59,64 +65,51 @@ export default function TextDiffApp() {
     navigator.clipboard.writeText(diffText)
   }
 
-  const handleDownloadDiff = () => {
-    const blob = new Blob([diffText], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'text-diff.txt'
-    document.body.appendChild(a)
-    a.click()
-
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
-
   return (
     <div className="mx-auto h-dvh max-w-full p-6">
-      <Card className="flex h-full flex-col overflow-hidden">
-        <CardHeader className="border-secondary flex-row justify-between border-b p-3">
-          <CardTitle className="text-md flex items-center gap-2 font-medium">
+      <Card className="h-full gap-0 overflow-hidden pb-0">
+        <CardHeader className="border-secondary flex-row justify-between border-b">
+          <CardTitle className="flex items-center gap-2">
             <GitCompare className="h-4 w-4" />
             Diff Viewer
           </CardTitle>
+          <CardDescription>
+            Compare two text files and view the differences
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex-1 p-0">
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel>
-              <Textarea
-                placeholder="Original text here..."
-                className="h-full resize-none rounded-none border-none font-mono"
-                value={originalText}
-                onChange={(e) => setOriginalText(e.target.value)}
-              />
+              <ResizablePanelGroup direction="vertical">
+                <ResizablePanel>
+                  <Textarea
+                    placeholder="Original text here..."
+                    className="h-full resize-none rounded-none border-none font-mono"
+                    value={originalText}
+                    onChange={(e) => setOriginalText(e.target.value)}
+                  />
+                </ResizablePanel>
+                <ResizableHandle />
+                <ResizablePanel>
+                  <Textarea
+                    placeholder="Modified text here..."
+                    className="h-full resize-none rounded-none border-none font-mono"
+                    value={modifiedText}
+                    onChange={(e) => setModifiedText(e.target.value)}
+                  />
+                </ResizablePanel>
+              </ResizablePanelGroup>
             </ResizablePanel>
             <ResizableHandle />
-            <ResizablePanel>
-              <Textarea
-                placeholder="Modified text here..."
-                className="h-full resize-none rounded-none border-none font-mono"
-                value={modifiedText}
-                onChange={(e) => setModifiedText(e.target.value)}
-              />
-            </ResizablePanel>
-            <ResizableHandle />
-            <ResizablePanel className="group relative bg-neutral-900/50">
+            <ResizablePanel className="group relative">
               <div className="absolute top-0 right-0 z-10 flex gap-2 p-2">
                 <Button
                   variant="outline"
-                  className="focus-visible::opacity-100 p-3 opacity-0 transition-opacity group-hover:opacity-100"
+                  size="icon"
+                  className="focus-visible::opacity-100 opacity-0 transition-opacity group-hover:opacity-100"
                   onClick={handleCopyDiff}
                 >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="focus-visible::opacity-100 p-3 opacity-0 transition-opacity group-hover:opacity-100"
-                  onClick={handleDownloadDiff}
-                >
-                  <Download className="h-4 w-4" />
+                  <Copy />
                 </Button>
               </div>
               <div className="absolute inset-0 overflow-auto">
