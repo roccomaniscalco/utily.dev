@@ -1,5 +1,9 @@
 'use client'
 
+import * as Diff from 'diff'
+import { Copy, GitCompare } from 'lucide-react'
+import { nanoid } from 'nanoid'
+import { useState } from 'react'
 import { Button } from '~/components/ui/button'
 import {
   Card,
@@ -15,10 +19,6 @@ import {
 } from '~/components/ui/resizable'
 import { Textarea } from '~/components/ui/textarea'
 import { cn } from '~/lib/utils'
-import * as Diff from 'diff'
-import { Copy, Download, GitCompare } from 'lucide-react'
-import { nanoid } from 'nanoid'
-import { useEffect, useState } from 'react'
 
 type DiffLine = {
   type: '+' | '-' | ' '
@@ -47,19 +47,10 @@ export default function TextDiffApp() {
   const [originalText, setOriginalText] = useState('')
   const [modifiedText, setModifiedText] = useState('')
 
-  const [diffResult, setDiffResult] = useState<DiffLine[]>([])
+  const diffResult = computeDiff(originalText, modifiedText)
   const diffText = diffResult
     .map((line) => `${line.type} ${line.text}`)
     .join('\n')
-
-  const handleCompare = () => {
-    const diff = computeDiff(originalText, modifiedText)
-    setDiffResult(diff)
-  }
-
-  useEffect(() => {
-    handleCompare()
-  }, [originalText, modifiedText])
 
   const handleCopyDiff = () => {
     navigator.clipboard.writeText(diffText)
@@ -68,23 +59,23 @@ export default function TextDiffApp() {
   return (
     <div className="mx-auto h-dvh max-w-full p-6">
       <Card className="h-full gap-0 overflow-hidden pb-0">
-        <CardHeader className="border-secondary flex-row justify-between border-b">
+        <CardHeader className="flex-row justify-between border-b">
           <CardTitle className="flex items-center gap-2">
             <GitCompare className="h-4 w-4" />
             Diff Viewer
           </CardTitle>
           <CardDescription>
-            Compare two text files and view the differences
+            Compare the differences between two text inputs
           </CardDescription>
         </CardHeader>
         <CardContent className="flex-1 p-0">
           <ResizablePanelGroup direction="horizontal">
-            <ResizablePanel>
+            <ResizablePanel defaultSize={30}>
               <ResizablePanelGroup direction="vertical">
                 <ResizablePanel>
                   <Textarea
                     placeholder="Original text here..."
-                    className="h-full resize-none rounded-none border-none font-mono"
+                    className="h-full resize-none rounded-none border-none px-6 py-3 font-mono dark:bg-transparent"
                     value={originalText}
                     onChange={(e) => setOriginalText(e.target.value)}
                   />
@@ -93,7 +84,7 @@ export default function TextDiffApp() {
                 <ResizablePanel>
                   <Textarea
                     placeholder="Modified text here..."
-                    className="h-full resize-none rounded-none border-none font-mono"
+                    className="h-full resize-none rounded-none border-none px-6 py-3 font-mono dark:bg-transparent"
                     value={modifiedText}
                     onChange={(e) => setModifiedText(e.target.value)}
                   />
@@ -114,7 +105,7 @@ export default function TextDiffApp() {
               </div>
               <div className="absolute inset-0 overflow-auto">
                 {diffResult.length === 0 && (
-                  <p className="text-muted-foreground flex h-full items-center justify-center font-mono text-sm">
+                  <p className="text-muted-foreground flex h-full items-center justify-center font-mono md:text-sm">
                     No text to compare
                   </p>
                 )}
