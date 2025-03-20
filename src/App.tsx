@@ -1,7 +1,7 @@
 'use client'
 
 import * as Diff from 'diff'
-import { Copy } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { useState } from 'react'
 import { Button } from '~/components/ui/button'
@@ -86,7 +86,7 @@ function Editor(props: EditorProps) {
       <div className="flex h-fit min-h-full">
         <LineNumbers lineCount={lineCount} />
         <Textarea
-          className="h-auto resize-none rounded-none border-none p-0 font-mono text-sm leading-6 text-nowrap focus-visible:ring-0 dark:bg-transparent"
+          className="h-auto resize-none rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap focus-visible:ring-0 dark:bg-transparent"
           value={props.value}
           onChange={(e) => props.onChange(e.target.value)}
         />
@@ -103,27 +103,16 @@ function Viewer(props: ViewerProps) {
     .map((line) => `${line.type} ${line.text}`)
     .join('\n')
 
-  const handleCopyDiff = () => {
-    navigator.clipboard.writeText(diffText)
-  }
-
   return (
     <>
       <div className="absolute top-0 right-0 z-10 p-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-          onClick={handleCopyDiff}
-        >
-          <Copy />
-        </Button>
+        <CopyButton text={diffText} />
       </div>
       <div className="absolute inset-0 overflow-y-auto">
         <div className="flex h-fit min-h-full">
           <LineNumbers lineCount={props.diffLines.length} />
           <div className="flex-1 overflow-x-auto">
-            <pre className="relative h-fit min-h-full w-fit min-w-full text-sm leading-6 select-none">
+            <pre className="relative h-fit min-h-full w-fit min-w-full text-sm leading-5 select-none">
               {props.diffLines.map((line) => (
                 <div
                   className={cn(
@@ -136,7 +125,7 @@ function Viewer(props: ViewerProps) {
                 </div>
               ))}
               <Textarea
-                className="absolute inset-0 resize-none rounded-none border-none p-0 font-mono text-sm leading-6 text-nowrap text-transparent focus-visible:ring-0 dark:bg-transparent"
+                className="absolute inset-0 resize-none rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap text-transparent focus-visible:ring-0 dark:bg-transparent"
                 value={diffText}
                 readOnly
               />
@@ -158,11 +147,39 @@ function LineNumbers(props: LineNumbersProps) {
       {lineNumbers.map((lineNumber) => (
         <li
           key={lineNumber}
-          className="text-muted-foreground w-content min-w-[3em] px-3 text-right font-mono text-sm leading-6 select-none"
+          className="text-muted-foreground w-content min-w-[3em] px-3 text-right font-mono text-sm leading-5 select-none"
         >
           {lineNumber}
         </li>
       ))}
     </ol>
+  )
+}
+
+type CopyButtonProps = Readonly<{
+  text: string
+}>
+function CopyButton(props: CopyButtonProps) {
+  const [copied, setCopied] = useState(false)
+
+  const handleClick = () => {
+    navigator.clipboard.writeText(props.text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      className="opacity-0 transition-opacity duration-200 group-hover:opacity-100 focus-visible:opacity-100"
+      onClick={handleClick}
+    >
+      {copied ? (
+        <Check className="animate-in fade-in duration-200" />
+      ) : (
+        <Copy className="animate-in fade-in duration-200" />
+      )}
+    </Button>
   )
 }
