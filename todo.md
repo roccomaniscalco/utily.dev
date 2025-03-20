@@ -3,9 +3,8 @@
 editor
 [ ] cmd+a result
 [ ] syntax highlighting (bonus for auto-detect)
-[ ] line numbers
+[x] line numbers
 [ ] keyboard shortcuts
-[ ] loading indicator for big diff
 
 options
 [ ] hide whitespace 

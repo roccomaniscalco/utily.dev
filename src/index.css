@@ -63,7 +63,7 @@
   --background: var(--term-bg-400);
   --foreground: var(--term-fg-100);
   --card: var(--term-bg-300);
-  --card-foreground: var(--term-fg-100);
+  --card-foreground: var(--term-fg-200);
   --popover: red;
   --popover-foreground: red;
   --primary: red;

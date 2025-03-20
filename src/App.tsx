@@ -28,10 +28,10 @@ type DiffLine = {
 
 // Using the diff library to compute differences
 function computeDiff(originalText: string, modifiedText: string) {
-  const diff = Diff.diffLines(originalText, modifiedText, {ignoreNewlineAtEof: false})
+  const diff = Diff.diffLines(originalText, modifiedText)
   return diff
     .map((part) => ({
-      type: part.added ? '+' : part.removed ? '-' : (' ' as DiffLine['type']),
+      type: getPartType(part),
       lines: part.value.replace(/\n$/, '').split('\n'),
     }))
     .flatMap((part) =>
@@ -43,12 +43,18 @@ function computeDiff(originalText: string, modifiedText: string) {
     )
 }
 
+function getPartType(part: Diff.Change) {
+  if (part.added) return '+' as const
+  if (part.removed) return '-' as const
+  return ' ' as const
+}
+
 export default function TextDiffApp() {
   const [originalText, setOriginalText] = useState('')
   const [modifiedText, setModifiedText] = useState('')
 
-  const diffResult = computeDiff(originalText, modifiedText)
-  const diffText = diffResult
+  const diffLines = computeDiff(originalText, modifiedText)
+  const diffText = diffLines
     .map((line) => `${line.type} ${line.text}`)
     .join('\n')
 
@@ -72,22 +78,12 @@ export default function TextDiffApp() {
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel defaultSize={30}>
               <ResizablePanelGroup direction="vertical">
-                <ResizablePanel>
-                  <Textarea
-                    placeholder="Original text here..."
-                    className="h-full resize-none rounded-none border-none px-6 py-0 font-mono dark:bg-transparent"
-                    value={originalText}
-                    onChange={(e) => setOriginalText(e.target.value)}
-                  />
+                <ResizablePanel className="relative">
+                  <Editor value={originalText} onChange={setOriginalText} />
                 </ResizablePanel>
                 <ResizableHandle />
-                <ResizablePanel>
-                  <Textarea
-                    placeholder="Modified text here..."
-                    className="h-full resize-none rounded-none border-none px-6 py-0 font-mono dark:bg-transparent"
-                    value={modifiedText}
-                    onChange={(e) => setModifiedText(e.target.value)}
-                  />
+                <ResizablePanel className="relative">
+                  <Editor value={modifiedText} onChange={setModifiedText} />
                 </ResizablePanel>
               </ResizablePanelGroup>
             </ResizablePanel>
@@ -97,37 +93,84 @@ export default function TextDiffApp() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="focus-visible::opacity-100 opacity-0 transition-opacity group-hover:opacity-100"
+                  className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                   onClick={handleCopyDiff}
                 >
                   <Copy />
                 </Button>
               </div>
-              <div className="absolute inset-0 overflow-auto">
-                {diffResult.length === 0 && (
-                  <p className="text-muted-foreground flex h-full items-center justify-center font-mono md:text-sm">
-                    No text to compare
-                  </p>
-                )}
-                <pre className="w-fit min-w-full md:text-sm">
-                  {diffResult.map((line) => (
-                    <div
-                      className={cn(
-                        'px-2',
-                        line.type === '+' && 'text-term-grass bg-term-grass/5',
-                        line.type === '-' && 'text-term-red bg-term-red/5',
-                      )}
-                      key={line.id}
-                    >
-                      {line.type} {line.text}
-                    </div>
-                  ))}
-                </pre>
-              </div>
+              <Viewer diffLines={diffLines} />
             </ResizablePanel>
           </ResizablePanelGroup>
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+type EditorProps = Readonly<{
+  value: string
+  onChange: (value: string) => void
+}>
+function Editor(props: EditorProps) {
+  const lineCount = props.value.split('\n').length
+  return (
+    <div className="absolute inset-0 overflow-y-auto">
+      <div className="flex h-fit min-h-full">
+        <LineNumbers lineCount={lineCount} />
+        <Textarea
+          className="h-auto resize-none rounded-none border-none p-0 font-mono text-sm leading-6 text-nowrap focus-visible:ring-0 dark:bg-transparent"
+          value={props.value}
+          onChange={(e) => props.onChange?.(e.target.value)}
+        />
+      </div>
+    </div>
+  )
+}
+
+type ViewerProps = Readonly<{
+  diffLines: DiffLine[]
+}>
+function Viewer(props: ViewerProps) {
+  return (
+    <div className="absolute inset-0 overflow-y-auto">
+      <div className="flex h-fit min-h-full">
+        <LineNumbers lineCount={props.diffLines.length} />
+        <div className='flex-1 overflow-x-auto'>
+          <pre className="text-sm leading-6 min-w-full w-fit">
+            {props.diffLines.map((line) => (
+              <div
+                className={cn(
+                  line.type === '+' && 'text-term-green bg-term-green/5',
+                  line.type === '-' && 'text-term-red bg-term-red/5',
+                )}
+                key={line.id}
+              >
+                {line.type} {line.text}
+              </div>
+            ))}
+          </pre>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+type LineNumbersProps = Readonly<{
+  lineCount: number
+}>
+function LineNumbers(props: LineNumbersProps) {
+  const lineNumbers = Array.from({ length: props.lineCount }, (_, i) => i + 1)
+  return (
+    <ol>
+      {lineNumbers.map((lineNumber) => (
+        <li
+          key={lineNumber}
+          className="text-muted-foreground w-content min-w-[3em] px-3 text-right font-mono text-sm leading-6 select-none"
+        >
+          {lineNumber}
+        </li>
+      ))}
+    </ol>
   )
 }
