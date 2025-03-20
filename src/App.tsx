@@ -52,15 +52,7 @@ function getPartType(part: Diff.Change) {
 export default function TextDiffApp() {
   const [originalText, setOriginalText] = useState('')
   const [modifiedText, setModifiedText] = useState('')
-
   const diffLines = computeDiff(originalText, modifiedText)
-  const diffText = diffLines
-    .map((line) => `${line.type} ${line.text}`)
-    .join('\n')
-
-  const handleCopyDiff = () => {
-    navigator.clipboard.writeText(diffText)
-  }
 
   return (
     <div className="mx-auto h-dvh max-w-full p-2">
@@ -78,27 +70,17 @@ export default function TextDiffApp() {
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel defaultSize={30}>
               <ResizablePanelGroup direction="vertical">
-                <ResizablePanel className="relative">
+                <ResizablePanel>
                   <Editor value={originalText} onChange={setOriginalText} />
                 </ResizablePanel>
                 <ResizableHandle />
-                <ResizablePanel className="relative">
+                <ResizablePanel>
                   <Editor value={modifiedText} onChange={setModifiedText} />
                 </ResizablePanel>
               </ResizablePanelGroup>
             </ResizablePanel>
             <ResizableHandle />
-            <ResizablePanel className="group relative">
-              <div className="absolute top-0 right-0 z-10 flex gap-2 p-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-                  onClick={handleCopyDiff}
-                >
-                  <Copy />
-                </Button>
-              </div>
+            <ResizablePanel>
               <Viewer diffLines={diffLines} />
             </ResizablePanel>
           </ResizablePanelGroup>
@@ -115,13 +97,13 @@ type EditorProps = Readonly<{
 function Editor(props: EditorProps) {
   const lineCount = props.value.split('\n').length
   return (
-    <div className="absolute inset-0 overflow-y-auto">
+    <div className="h-full w-full overflow-y-auto">
       <div className="flex h-fit min-h-full">
         <LineNumbers lineCount={lineCount} />
         <Textarea
           className="h-auto resize-none rounded-none border-none p-0 font-mono text-sm leading-6 text-nowrap focus-visible:ring-0 dark:bg-transparent"
           value={props.value}
-          onChange={(e) => props.onChange?.(e.target.value)}
+          onChange={(e) => props.onChange(e.target.value)}
         />
       </div>
     </div>
@@ -132,24 +114,44 @@ type ViewerProps = Readonly<{
   diffLines: DiffLine[]
 }>
 function Viewer(props: ViewerProps) {
+  const diffText = props.diffLines
+    .map((line) => `${line.type} ${line.text}`)
+    .join('\n')
+
+  const handleCopyDiff = () => {
+    navigator.clipboard.writeText(diffText)
+  }
+
   return (
-    <div className="absolute inset-0 overflow-y-auto">
-      <div className="flex h-fit min-h-full">
-        <LineNumbers lineCount={props.diffLines.length} />
-        <div className='flex-1 overflow-x-auto'>
-          <pre className="text-sm leading-6 min-w-full w-fit">
-            {props.diffLines.map((line) => (
-              <div
-                className={cn(
-                  line.type === '+' && 'text-term-green bg-term-green/5',
-                  line.type === '-' && 'text-term-red bg-term-red/5',
-                )}
-                key={line.id}
-              >
-                {line.type} {line.text}
-              </div>
-            ))}
-          </pre>
+    <div className="relative group h-full w-full">
+      <div className="absolute top-0 right-0 z-10 p-2">
+        <Button
+          variant="outline"
+          size="icon"
+          className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+          onClick={handleCopyDiff}
+        >
+          <Copy />
+        </Button>
+      </div>
+      <div className="absolute inset-0 overflow-y-auto">
+        <div className="flex h-fit min-h-full">
+          <LineNumbers lineCount={props.diffLines.length} />
+          <div className="flex-1 overflow-x-auto">
+            <pre className="w-fit min-w-full text-sm leading-6">
+              {props.diffLines.map((line) => (
+                <div
+                  className={cn(
+                    line.type === '+' && 'text-term-green bg-term-green/5',
+                    line.type === '-' && 'text-term-red bg-term-red/5',
+                  )}
+                  key={line.id}
+                >
+                  {line.type} {line.text}
+                </div>
+              ))}
+            </pre>
+          </div>
         </div>
       </div>
     </div>
