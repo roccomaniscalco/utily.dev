@@ -70,17 +70,17 @@ export default function TextDiffApp() {
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel defaultSize={30}>
               <ResizablePanelGroup direction="vertical">
-                <ResizablePanel>
+                <ResizablePanel className="relative">
                   <Editor value={originalText} onChange={setOriginalText} />
                 </ResizablePanel>
                 <ResizableHandle />
-                <ResizablePanel>
+                <ResizablePanel className="relative">
                   <Editor value={modifiedText} onChange={setModifiedText} />
                 </ResizablePanel>
               </ResizablePanelGroup>
             </ResizablePanel>
             <ResizableHandle />
-            <ResizablePanel>
+            <ResizablePanel className="group relative">
               <Viewer diffLines={diffLines} />
             </ResizablePanel>
           </ResizablePanelGroup>
@@ -97,7 +97,7 @@ type EditorProps = Readonly<{
 function Editor(props: EditorProps) {
   const lineCount = props.value.split('\n').length
   return (
-    <div className="h-full w-full overflow-y-auto">
+    <div className="absolute inset-0 overflow-y-auto">
       <div className="flex h-fit min-h-full">
         <LineNumbers lineCount={lineCount} />
         <Textarea
@@ -123,7 +123,7 @@ function Viewer(props: ViewerProps) {
   }
 
   return (
-    <div className="relative group h-full w-full">
+    <>
       <div className="absolute top-0 right-0 z-10 p-2">
         <Button
           variant="outline"
@@ -138,7 +138,7 @@ function Viewer(props: ViewerProps) {
         <div className="flex h-fit min-h-full">
           <LineNumbers lineCount={props.diffLines.length} />
           <div className="flex-1 overflow-x-auto">
-            <pre className="w-fit min-w-full text-sm leading-6">
+            <pre className="relative h-fit min-h-full w-fit min-w-full text-sm leading-6 select-none">
               {props.diffLines.map((line) => (
                 <div
                   className={cn(
@@ -150,11 +150,16 @@ function Viewer(props: ViewerProps) {
                   {line.type} {line.text}
                 </div>
               ))}
+              <Textarea
+                className="absolute inset-0 resize-none rounded-none border-none p-0 font-mono text-sm leading-6 text-nowrap text-transparent focus-visible:ring-0 dark:bg-transparent"
+                value={diffText}
+                readOnly
+              />
             </pre>
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
