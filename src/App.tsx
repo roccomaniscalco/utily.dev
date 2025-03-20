@@ -56,16 +56,7 @@ export default function TextDiffApp() {
 
   return (
     <div className="mx-auto h-dvh max-w-full p-2">
-      <Card className="h-full gap-0 overflow-hidden pb-0">
-        <CardHeader className="flex-row justify-between border-b">
-          <CardTitle className="flex items-center gap-2">
-            <GitCompare className="h-4 w-4" />
-            Diff Viewer
-          </CardTitle>
-          <CardDescription>
-            Compare the differences between two text inputs
-          </CardDescription>
-        </CardHeader>
+      <Card className="h-full gap-0 overflow-hidden p-0">
         <CardContent className="flex-1 p-0">
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel defaultSize={30}>
