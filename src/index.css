@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @plugin "tailwindcss-animate";
 
@@ -40,24 +40,46 @@
 }
 
 .dark {
-  --background: oklch(0.20 0.04 173);
-  --foreground: oklch(0.85 0.02 173);
-  --card: oklch(0.12 0.05 173 / 80%);
-  --card-foreground: oklch(0.9 0.02 173);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.65 0.02 173);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --term-red: #f7768e;
+  --term-orange: #ff9e64;
+  --term-yellow: #e0af68;
+  --term-custard: #cfc9c2;
+  --term-grass: #9ece6a;
+  --term-green: #73daca;
+  --term-mint: #b4f9f8;
+  --term-cyan: #2ac3de;
+  --term-sky: #7dcfff;
+  --term-blue: #7aa2f7;
+  --term-magenta: #bb9af7;
+  --term-fg-100: #c0caf5;
+  --term-fg-200: #a9b1d6;
+  --term-fg-300: #9aa5ce;
+  --term-fg-400: #565f89;
+  --term-bg-100: #414868;
+  --term-bg-200: #24283b;
+  --term-bg-300: #1a1b26;
+  --term-bg-400: #16161e;
+
+  --background: var(--term-bg-400);
+  --foreground: var(--term-fg-100);
+  --card: var(--term-bg-300);
+  --card-foreground: var(--term-fg-100);
+  --popover: red;
+  --popover-foreground: red;
+  --primary: red;
+  --primary-foreground: red;
+  --secondary: var(--term-bg-200);
+  --secondary-foreground: var(--term-fg-100);
+  --muted: red;
+  --muted-foreground: var(--term-fg-400);
+  --accent: red;
+  --accent-foreground: var(--term-blue);
+  --destructive: var(--term-red);
+  --border: oklch(from var(--term-fg-100) l c h / 10%);
+
+  --input: var(--term-bg-100);
+
+  --ring: var(--term-magenta);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -109,6 +131,17 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-term-red: var(--term-red);
+  --color-term-orange: var(--term-orange);
+  --color-term-yellow: var(--term-yellow);
+  --color-term-custard: var(--term-custard);
+  --color-term-grass: var(--term-grass);
+  --color-term-green: var(--term-green);
+  --color-term-mint: var(--term-mint);
+  --color-term-cyan: var(--term-cyan);
+  --color-term-sky: var(--term-sky);
+  --color-term-blue: var(--term-blue);
+  --color-term-magenta: var(--term-magenta);
 }
 
 @layer base {

@@ -28,7 +28,7 @@ type DiffLine = {
 
 // Using the diff library to compute differences
 function computeDiff(originalText: string, modifiedText: string) {
-  const diff = Diff.diffLines(originalText, modifiedText)
+  const diff = Diff.diffLines(originalText, modifiedText, {ignoreNewlineAtEof: false})
   return diff
     .map((part) => ({
       type: part.added ? '+' : part.removed ? '-' : (' ' as DiffLine['type']),
@@ -57,7 +57,7 @@ export default function TextDiffApp() {
   }
 
   return (
-    <div className="mx-auto h-dvh max-w-full p-6">
+    <div className="mx-auto h-dvh max-w-full p-2">
       <Card className="h-full gap-0 overflow-hidden pb-0">
         <CardHeader className="flex-row justify-between border-b">
           <CardTitle className="flex items-center gap-2">
@@ -75,7 +75,7 @@ export default function TextDiffApp() {
                 <ResizablePanel>
                   <Textarea
                     placeholder="Original text here..."
-                    className="h-full resize-none rounded-none border-none px-6 py-3 font-mono dark:bg-transparent"
+                    className="h-full resize-none rounded-none border-none px-6 py-0 font-mono dark:bg-transparent"
                     value={originalText}
                     onChange={(e) => setOriginalText(e.target.value)}
                   />
@@ -84,7 +84,7 @@ export default function TextDiffApp() {
                 <ResizablePanel>
                   <Textarea
                     placeholder="Modified text here..."
-                    className="h-full resize-none rounded-none border-none px-6 py-3 font-mono dark:bg-transparent"
+                    className="h-full resize-none rounded-none border-none px-6 py-0 font-mono dark:bg-transparent"
                     value={modifiedText}
                     onChange={(e) => setModifiedText(e.target.value)}
                   />
@@ -109,13 +109,13 @@ export default function TextDiffApp() {
                     No text to compare
                   </p>
                 )}
-                <pre className="w-fit min-w-full py-2 md:text-sm">
+                <pre className="w-fit min-w-full md:text-sm">
                   {diffResult.map((line) => (
                     <div
                       className={cn(
                         'px-2',
-                        line.type === '+' && 'bg-green-950 text-green-100',
-                        line.type === '-' && 'bg-red-950 text-red-100',
+                        line.type === '+' && 'text-term-grass bg-term-grass/5',
+                        line.type === '-' && 'text-term-red bg-term-red/5',
                       )}
                       key={line.id}
                     >
