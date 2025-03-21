@@ -3,7 +3,7 @@
 import * as Diff from 'diff'
 import { Check, Copy } from 'lucide-react'
 import { nanoid } from 'nanoid'
-import { useState } from 'react'
+import { memo, useDeferredValue, useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
 import {
@@ -13,12 +13,6 @@ import {
 } from '~/components/ui/resizable'
 import { Textarea } from '~/components/ui/textarea'
 import { cn } from '~/lib/utils'
-
-type DiffLine = {
-  type: '+' | '-' | ' '
-  text: string
-  id: string
-}
 
 // Using the diff library to compute differences
 function computeDiff(originalText: string, modifiedText: string) {
@@ -46,7 +40,9 @@ function getPartType(part: Diff.Change) {
 export default function TextDiffApp() {
   const [originalText, setOriginalText] = useState('')
   const [modifiedText, setModifiedText] = useState('')
-  const diffLines = computeDiff(originalText, modifiedText)
+
+  const deferredOriginalText = useDeferredValue(originalText)
+  const deferredModifiedText = useDeferredValue(modifiedText)
 
   return (
     <div className="mx-auto h-dvh max-w-full p-2">
@@ -66,7 +62,10 @@ export default function TextDiffApp() {
             </ResizablePanel>
             <ResizableHandle />
             <ResizablePanel className="group relative">
-              <Viewer diffLines={diffLines} />
+              <Viewer
+                originalText={deferredOriginalText}
+                modifiedText={deferredModifiedText}
+              />
             </ResizablePanel>
           </ResizablePanelGroup>
         </CardContent>
@@ -96,10 +95,12 @@ function Editor(props: EditorProps) {
 }
 
 type ViewerProps = Readonly<{
-  diffLines: DiffLine[]
+  originalText: string
+  modifiedText: string
 }>
-function Viewer(props: ViewerProps) {
-  const diffText = props.diffLines
+const Viewer = memo(function (props: ViewerProps) {
+  const diffLines = computeDiff(props.originalText, props.modifiedText)
+  const diffText = diffLines
     .map((line) => `${line.type} ${line.text}`)
     .join('\n')
 
@@ -110,10 +111,10 @@ function Viewer(props: ViewerProps) {
       </div>
       <div className="absolute inset-0 overflow-y-auto">
         <div className="flex h-fit min-h-full">
-          <LineNumbers lineCount={props.diffLines.length} />
+          <LineNumbers lineCount={diffLines.length} />
           <div className="flex-1 overflow-x-auto">
             <pre className="relative h-fit min-h-full w-fit min-w-full text-sm leading-5 select-none">
-              {props.diffLines.map((line) => (
+              {diffLines.map((line) => (
                 <div
                   className={cn(
                     line.type === '+' && 'text-term-green bg-term-green/5',
@@ -135,7 +136,7 @@ function Viewer(props: ViewerProps) {
       </div>
     </>
   )
-}
+})
 
 type LineNumbersProps = Readonly<{
   lineCount: number
