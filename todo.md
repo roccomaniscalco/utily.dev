@@ -4,10 +4,10 @@ editor
 [x] cmd+a result
 [ ] syntax highlighting (bonus for auto-detect)
 [x] line numbers
-[ ] line numbers that don't suck
+[x] line numbers that don't suck
 [ ] keyboard shortcuts
 [ ] active line highlighted
-
+[ ] dark mode scrollbar + show diff in scrollbar
 
 options
 [ ] hide whitespace 

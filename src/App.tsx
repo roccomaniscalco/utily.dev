@@ -1,8 +1,5 @@
-'use client'
-
-import * as Diff from 'diff'
+import { diffLines } from 'diff'
 import { Check, Copy } from 'lucide-react'
-import { nanoid } from 'nanoid'
 import { memo, useDeferredValue, useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
@@ -14,27 +11,50 @@ import {
 import { Textarea } from '~/components/ui/textarea'
 import { cn } from '~/lib/utils'
 
-// Using the diff library to compute differences
-function computeDiff(originalText: string, modifiedText: string) {
-  const diff = Diff.diffLines(originalText, modifiedText)
-  return diff
-    .map((part) => ({
-      type: getPartType(part),
-      lines: part.value.replace(/\n$/, '').split('\n'),
-    }))
-    .flatMap((part) =>
-      part.lines.map((line) => ({
-        id: nanoid(),
-        type: part.type,
-        text: line,
-      })),
-    )
+type DiffLine = {
+  type: '+' | '-' | ' '
+  text: string
+  originalLine: number | null
+  modifiedLine: number | null
 }
 
-function getPartType(part: Diff.Change) {
-  if (part.added) return '+' as const
-  if (part.removed) return '-' as const
-  return ' ' as const
+function computeDiff(originalText: string, modifiedText: string) {
+  const changes = diffLines(originalText, modifiedText)
+
+  const diff: DiffLine[] = []
+  let originalLineCount = 0
+  let modifiedLineCount = 0
+
+  for (const change of changes) {
+    const lines = change.value.replace(/\n$/, '').split('\n')
+
+    for (const line of lines) {
+      if (change.added) {
+        diff.push({
+          type: '+',
+          text: line,
+          originalLine: null,
+          modifiedLine: ++modifiedLineCount,
+        })
+      } else if (change.removed) {
+        diff.push({
+          type: '-',
+          text: line,
+          originalLine: ++originalLineCount,
+          modifiedLine: null,
+        })
+      } else {
+        diff.push({
+          type: ' ',
+          text: line,
+          originalLine: ++originalLineCount,
+          modifiedLine: ++modifiedLineCount,
+        })
+      }
+    }
+  }
+
+  return diff
 }
 
 export default function TextDiffApp() {
@@ -80,10 +100,14 @@ type EditorProps = Readonly<{
 }>
 function Editor(props: EditorProps) {
   const lineCount = props.value.split('\n').length
+  const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1)
+
   return (
     <div className="absolute inset-0 overflow-y-auto">
       <div className="flex h-fit min-h-full">
-        <LineNumbers lineCount={lineCount} />
+        <div className="px-3">
+          <LineNumbers lineNumbers={lineNumbers} />
+        </div>
         <Textarea
           className="h-auto resize-none rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap focus-visible:ring-0 dark:bg-transparent"
           value={props.value}
@@ -111,16 +135,19 @@ const Viewer = memo(function (props: ViewerProps) {
       </div>
       <div className="absolute inset-0 overflow-y-auto">
         <div className="flex h-fit min-h-full">
-          <LineNumbers lineCount={diffLines.length} />
+          <div className="grid grid-cols-2 gap-2 px-3">
+            <LineNumbers lineNumbers={diffLines.map((l) => l.originalLine)} />
+            <LineNumbers lineNumbers={diffLines.map((l) => l.modifiedLine)} />
+          </div>
           <div className="flex-1 overflow-x-auto">
             <pre className="relative h-fit min-h-full w-fit min-w-full text-sm leading-5 select-none">
-              {diffLines.map((line) => (
+              {diffLines.map((line, index) => (
                 <div
                   className={cn(
                     line.type === '+' && 'text-term-green bg-term-green/5',
                     line.type === '-' && 'text-term-red bg-term-red/5',
                   )}
-                  key={line.id}
+                  key={index}
                 >
                   {line.type} {line.text}
                 </div>
@@ -139,18 +166,17 @@ const Viewer = memo(function (props: ViewerProps) {
 })
 
 type LineNumbersProps = Readonly<{
-  lineCount: number
+  lineNumbers: (number | null)[]
 }>
 function LineNumbers(props: LineNumbersProps) {
-  const lineNumbers = Array.from({ length: props.lineCount }, (_, i) => i + 1)
   return (
-    <ol>
-      {lineNumbers.map((lineNumber) => (
+    <ol className="flex-1">
+      {props.lineNumbers.map((num, index) => (
         <li
-          key={lineNumber}
-          className="text-muted-foreground w-content min-w-[3em] px-3 text-right font-mono text-sm leading-5 select-none"
+          className="text-muted-foreground text-right font-mono text-sm leading-5 select-none"
+          key={index}
         >
-          {lineNumber}
+          {num ?? <br />}
         </li>
       ))}
     </ol>
