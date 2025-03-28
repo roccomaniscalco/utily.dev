@@ -11,10 +11,14 @@ import { Textarea } from '~/components/ui/textarea'
 import { cn } from '~/lib/utils'
 
 type Diff = {
-  type: '+' | '-' | ' '
-  text: string
-  originalLine: number | null
-  modifiedLine: number | null
+  added: number
+  removed: number
+  lines: {
+    type: '+' | '-' | ' '
+    text: string
+    originalLine: number | null
+    modifiedLine: number | null
+  }[]
 }
 
 function computeDiff(originalText: string, modifiedText: string) {
@@ -22,27 +26,34 @@ function computeDiff(originalText: string, modifiedText: string) {
     oneChangePerToken: true, // split changes by line instead of by type of change
   })
 
-  const diffs: Diff[] = []
+  const diff: Diff = {
+    added: 0,
+    removed: 0,
+    lines: [],
+  }
+
   let originalLineCount = 0
   let modifiedLineCount = 0
 
   for (const change of changes) {
     if (change.added) {
-      diffs.push({
+      ++diff.added
+      diff.lines.push({
         type: '+',
         text: change.value,
         originalLine: null,
         modifiedLine: ++modifiedLineCount,
       })
     } else if (change.removed) {
-      diffs.push({
+      ++diff.removed
+      diff.lines.push({
         type: '-',
         text: change.value,
         originalLine: ++originalLineCount,
         modifiedLine: null,
       })
     } else {
-      diffs.push({
+      diff.lines.push({
         type: ' ',
         text: change.value,
         originalLine: ++originalLineCount,
@@ -51,7 +62,7 @@ function computeDiff(originalText: string, modifiedText: string) {
     }
   }
 
-  return diffs
+  return diff
 }
 
 export default function TextDiffApp() {
@@ -133,24 +144,31 @@ type ViewerProps = Readonly<{
   modifiedText: string
 }>
 function Viewer(props: ViewerProps) {
-  const diffs = computeDiff(props.originalText, props.modifiedText)
-  const diffText = diffs.map((line) => `${line.type} ${line.text}`).join('')
+  const diff = computeDiff(props.originalText, props.modifiedText)
+  const diffText = diff.lines
+    .map((line) => `${line.type} ${line.text}`)
+    .join('')
 
   return (
     <Card className="size-full gap-0 overflow-clip p-0">
-      <div className="border-b px-3 py-1">
+      <div className="flex justify-between gap-3 border-b px-3 py-1">
         <h2 className="text-muted-foreground text-sm font-semibold uppercase">
           Difference
         </h2>
+        <div className="flex items-center gap-1.5 text-sm tabular-nums">
+          <p className="text-term-green">+{diff.added}</p>
+          <p className="text-muted-foreground">/</p>
+          <p className="text-term-red">-{diff.removed}</p>
+        </div>
       </div>
-      <ScrollArea className="isolate size-full">
+      <ScrollArea className="isolate min-h-0 flex-1">
         <div className="flex min-h-full items-stretch">
           <div className="bg-card sticky top-0 left-0 z-10 grid shrink-0 grid-cols-2 gap-2 px-3">
-            <LineNumbers lineNumbers={diffs.map((l) => l.originalLine)} />
-            <LineNumbers lineNumbers={diffs.map((l) => l.modifiedLine)} />
+            <LineNumbers lineNumbers={diff.lines.map((l) => l.originalLine)} />
+            <LineNumbers lineNumbers={diff.lines.map((l) => l.modifiedLine)} />
           </div>
           <pre className="relative flex-1 text-sm leading-5 select-none">
-            {diffs.map((line, index) => (
+            {diff.lines.map((line, index) => (
               <div
                 className={cn(
                   line.type === '+' && 'text-term-green bg-term-green/5',

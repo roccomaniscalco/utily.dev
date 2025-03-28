@@ -2,7 +2,7 @@
 features
 [ ] persistence
 [ ] file upload
-
+[x] added/removed count
 
 editor
 [x] cmd+a result
