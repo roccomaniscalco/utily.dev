@@ -1,7 +1,5 @@
 import { diffLines } from 'diff'
-import { Check, Copy } from 'lucide-react'
 import { useDeferredValue, useState } from 'react'
-import { Button } from '~/components/ui/button'
 import { Card } from '~/components/ui/card'
 import {
   ResizableHandle,
