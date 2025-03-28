@@ -11,7 +11,7 @@ import {
 import { Textarea } from '~/components/ui/textarea'
 import { cn } from '~/lib/utils'
 
-type DiffLine = {
+type Diff = {
   type: '+' | '-' | ' '
   text: string
   originalLine: number | null
@@ -19,42 +19,40 @@ type DiffLine = {
 }
 
 function computeDiff(originalText: string, modifiedText: string) {
-  const changes = diffLines(originalText, modifiedText)
+  const changes = diffLines(originalText, modifiedText, {
+    oneChangePerToken: true, // split changes by line instead of by type of change
+  })
 
-  const diff: DiffLine[] = []
+  const diffs: Diff[] = []
   let originalLineCount = 0
   let modifiedLineCount = 0
 
   for (const change of changes) {
-    const lines = change.value.replace(/\n$/, '').split('\n')
-
-    for (const line of lines) {
-      if (change.added) {
-        diff.push({
-          type: '+',
-          text: line,
-          originalLine: null,
-          modifiedLine: ++modifiedLineCount,
-        })
-      } else if (change.removed) {
-        diff.push({
-          type: '-',
-          text: line,
-          originalLine: ++originalLineCount,
-          modifiedLine: null,
-        })
-      } else {
-        diff.push({
-          type: ' ',
-          text: line,
-          originalLine: ++originalLineCount,
-          modifiedLine: ++modifiedLineCount,
-        })
-      }
+    if (change.added) {
+      diffs.push({
+        type: '+',
+        text: change.value,
+        originalLine: null,
+        modifiedLine: ++modifiedLineCount,
+      })
+    } else if (change.removed) {
+      diffs.push({
+        type: '-',
+        text: change.value,
+        originalLine: ++originalLineCount,
+        modifiedLine: null,
+      })
+    } else {
+      diffs.push({
+        type: ' ',
+        text: change.value,
+        originalLine: ++originalLineCount,
+        modifiedLine: ++modifiedLineCount,
+      })
     }
   }
 
-  return diff
+  return diffs
 }
 
 export default function TextDiffApp() {
@@ -123,10 +121,8 @@ type ViewerProps = Readonly<{
   modifiedText: string
 }>
 const Viewer = memo(function (props: ViewerProps) {
-  const diffLines = computeDiff(props.originalText, props.modifiedText)
-  const diffText = diffLines
-    .map((line) => `${line.type} ${line.text}`)
-    .join('\n')
+  const diffs = computeDiff(props.originalText, props.modifiedText)
+  const diffText = diffs.map((line) => `${line.type} ${line.text}`).join()
 
   return (
     <>
@@ -136,12 +132,12 @@ const Viewer = memo(function (props: ViewerProps) {
       <div className="absolute inset-0 overflow-y-auto">
         <div className="flex h-fit min-h-full">
           <div className="grid grid-cols-2 gap-2 px-3">
-            <LineNumbers lineNumbers={diffLines.map((l) => l.originalLine)} />
-            <LineNumbers lineNumbers={diffLines.map((l) => l.modifiedLine)} />
+            <LineNumbers lineNumbers={diffs.map((l) => l.originalLine)} />
+            <LineNumbers lineNumbers={diffs.map((l) => l.modifiedLine)} />
           </div>
           <div className="flex-1 overflow-x-auto">
             <pre className="relative h-fit min-h-full w-fit min-w-full text-sm leading-5 select-none">
-              {diffLines.map((line, index) => (
+              {diffs.map((line, index) => (
                 <div
                   className={cn(
                     line.type === '+' && 'text-term-green bg-term-green/5',
