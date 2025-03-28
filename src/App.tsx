@@ -122,7 +122,7 @@ type ViewerProps = Readonly<{
 }>
 const Viewer = memo(function (props: ViewerProps) {
   const diffs = computeDiff(props.originalText, props.modifiedText)
-  const diffText = diffs.map((line) => `${line.type} ${line.text}`).join()
+  const diffText = diffs.map((line) => `${line.type} ${line.text}`).join("")
 
   return (
     <>
@@ -149,7 +149,7 @@ const Viewer = memo(function (props: ViewerProps) {
                 </div>
               ))}
               <Textarea
-                className="absolute inset-0 resize-none rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap text-transparent focus-visible:ring-0 dark:bg-transparent"
+                className="absolute inset-0 resize-none rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap text-transparent focus-visible:ring-0 dark:bg-transparent overflow-hidden"
                 value={diffText}
                 readOnly
               />
