@@ -7,7 +7,8 @@ editor
 [x] line numbers that don't suck
 [ ] keyboard shortcuts
 [ ] active line highlighted
-[ ] dark mode scrollbar + show diff in scrollbar
+[x] custom scrollbar
+[ ] show diff in scrollbar
 
 options
 [ ] hide whitespace 

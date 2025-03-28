@@ -1,6 +1,6 @@
 import { diffLines } from 'diff'
 import { Check, Copy } from 'lucide-react'
-import { memo, useDeferredValue, useState } from 'react'
+import { useDeferredValue, useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
 import {
@@ -8,6 +8,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '~/components/ui/resizable'
+import { ScrollArea } from '~/components/ui/scroll-area'
 import { Textarea } from '~/components/ui/textarea'
 import { cn } from '~/lib/utils'
 
@@ -64,22 +65,25 @@ export default function TextDiffApp() {
 
   return (
     <div className="mx-auto h-dvh max-w-full p-2">
-      <Card className="h-full gap-0 overflow-hidden p-0">
-        <CardContent className="flex-1 p-0">
-          <ResizablePanelGroup direction="horizontal">
+      <Card className="h-full gap-0 overflow-clip p-0">
+        <CardContent className="relative flex-1 p-0">
+          <ResizablePanelGroup
+            className="absolute inset-0"
+            direction="horizontal"
+          >
             <ResizablePanel defaultSize={30}>
               <ResizablePanelGroup direction="vertical">
-                <ResizablePanel className="relative">
+                <ResizablePanel>
                   <Editor value={originalText} onChange={setOriginalText} />
                 </ResizablePanel>
                 <ResizableHandle />
-                <ResizablePanel className="relative">
+                <ResizablePanel>
                   <Editor value={modifiedText} onChange={setModifiedText} />
                 </ResizablePanel>
               </ResizablePanelGroup>
             </ResizablePanel>
             <ResizableHandle />
-            <ResizablePanel className="group relative">
+            <ResizablePanel>
               <Viewer
                 originalText={deferredOriginalText}
                 modifiedText={deferredModifiedText}
@@ -101,18 +105,18 @@ function Editor(props: EditorProps) {
   const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1)
 
   return (
-    <div className="absolute inset-0 overflow-y-auto">
-      <div className="flex h-fit min-h-full">
-        <div className="px-3">
+    <ScrollArea className="isolate size-full">
+      <div className="flex items-stretch min-h-full">
+        <div className="bg-card sticky top-0 left-0 z-10 px-3">
           <LineNumbers lineNumbers={lineNumbers} />
         </div>
         <Textarea
-          className="h-auto resize-none rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap focus-visible:ring-0 dark:bg-transparent"
+          className="flex-1 resize-none rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap focus-visible:ring-0 dark:bg-transparent"
           value={props.value}
           onChange={(e) => props.onChange(e.target.value)}
         />
       </div>
-    </div>
+    </ScrollArea>
   )
 }
 
@@ -120,53 +124,49 @@ type ViewerProps = Readonly<{
   originalText: string
   modifiedText: string
 }>
-const Viewer = memo(function (props: ViewerProps) {
+function Viewer(props: ViewerProps) {
   const diffs = computeDiff(props.originalText, props.modifiedText)
-  const diffText = diffs.map((line) => `${line.type} ${line.text}`).join("")
+  const diffText = diffs.map((line) => `${line.type} ${line.text}`).join('')
 
   return (
-    <>
+    <ScrollArea className="relative isolate size-full">
       <div className="absolute top-0 right-0 z-10 p-2">
         <CopyButton text={diffText} />
       </div>
-      <div className="absolute inset-0 overflow-y-auto">
-        <div className="flex h-fit min-h-full">
-          <div className="grid grid-cols-2 gap-2 px-3">
-            <LineNumbers lineNumbers={diffs.map((l) => l.originalLine)} />
-            <LineNumbers lineNumbers={diffs.map((l) => l.modifiedLine)} />
-          </div>
-          <div className="flex-1 overflow-x-auto">
-            <pre className="relative h-fit min-h-full w-fit min-w-full text-sm leading-5 select-none">
-              {diffs.map((line, index) => (
-                <div
-                  className={cn(
-                    line.type === '+' && 'text-term-green bg-term-green/5',
-                    line.type === '-' && 'text-term-red bg-term-red/5',
-                  )}
-                  key={index}
-                >
-                  {line.type} {line.text}
-                </div>
-              ))}
-              <Textarea
-                className="absolute inset-0 resize-none rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap text-transparent focus-visible:ring-0 dark:bg-transparent overflow-hidden"
-                value={diffText}
-                readOnly
-              />
-            </pre>
-          </div>
+      <div className="flex items-stretch min-h-full">
+        <div className="bg-card sticky top-0 left-0 z-10 grid shrink-0 grid-cols-2 gap-2 px-3">
+          <LineNumbers lineNumbers={diffs.map((l) => l.originalLine)} />
+          <LineNumbers lineNumbers={diffs.map((l) => l.modifiedLine)} />
         </div>
+        <pre className="relative flex-1 text-sm leading-5 select-none">
+          {diffs.map((line, index) => (
+            <div
+              className={cn(
+                line.type === '+' && 'text-term-green bg-term-green/5',
+                line.type === '-' && 'text-term-red bg-term-red/5',
+              )}
+              key={index}
+            >
+              {line.type} {line.text}
+            </div>
+          ))}
+          <Textarea
+            className="absolute inset-0 resize-none overflow-clip rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap text-transparent focus-visible:ring-0 dark:bg-transparent"
+            value={diffText}
+            readOnly
+          />
+        </pre>
       </div>
-    </>
+    </ScrollArea>
   )
-})
+}
 
 type LineNumbersProps = Readonly<{
   lineNumbers: (number | null)[]
 }>
 function LineNumbers(props: LineNumbersProps) {
   return (
-    <ol className="flex-1">
+    <ol>
       {props.lineNumbers.map((num, index) => (
         <li
           className="text-muted-foreground text-right font-mono text-sm leading-5 select-none"
@@ -192,12 +192,7 @@ function CopyButton(props: CopyButtonProps) {
   }
 
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      className="opacity-0 transition-opacity duration-200 group-hover:opacity-100 focus-visible:opacity-100"
-      onClick={handleClick}
-    >
+    <Button variant="outline" size="icon" onClick={handleClick}>
       {copied ? (
         <Check className="animate-in fade-in duration-200" />
       ) : (
