@@ -2,7 +2,7 @@ import { diffLines } from 'diff'
 import { Check, Copy } from 'lucide-react'
 import { useDeferredValue, useState } from 'react'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent } from '~/components/ui/card'
+import { Card } from '~/components/ui/card'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -64,39 +64,42 @@ export default function TextDiffApp() {
   const deferredModifiedText = useDeferredValue(modifiedText)
 
   return (
-    <div className="mx-auto h-dvh max-w-full p-2">
-      <Card className="h-full gap-0 overflow-clip p-0">
-        <CardContent className="relative flex-1 p-0">
-          <ResizablePanelGroup
-            className="absolute inset-0"
-            direction="horizontal"
-          >
-            <ResizablePanel defaultSize={30}>
-              <ResizablePanelGroup direction="vertical">
-                <ResizablePanel>
-                  <Editor value={originalText} onChange={setOriginalText} />
-                </ResizablePanel>
-                <ResizableHandle />
-                <ResizablePanel>
-                  <Editor value={modifiedText} onChange={setModifiedText} />
-                </ResizablePanel>
-              </ResizablePanelGroup>
-            </ResizablePanel>
-            <ResizableHandle />
-            <ResizablePanel>
-              <Viewer
-                originalText={deferredOriginalText}
-                modifiedText={deferredModifiedText}
-              />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </CardContent>
-      </Card>
-    </div>
+    <ResizablePanelGroup
+      className="absolute inset-0 p-2"
+      direction="horizontal"
+    >
+      <ResizablePanel>
+        <ResizablePanelGroup direction="vertical">
+          <ResizablePanel>
+            <Editor
+              title="Original"
+              value={originalText}
+              onChange={setOriginalText}
+            />
+          </ResizablePanel>
+          <ResizableHandle />
+          <ResizablePanel>
+            <Editor
+              title="Modified"
+              value={modifiedText}
+              onChange={setModifiedText}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </ResizablePanel>
+      <ResizableHandle />
+      <ResizablePanel>
+        <Viewer
+          originalText={deferredOriginalText}
+          modifiedText={deferredModifiedText}
+        />
+      </ResizablePanel>
+    </ResizablePanelGroup>
   )
 }
 
 type EditorProps = Readonly<{
+  title: string
   value: string
   onChange: (value: string) => void
 }>
@@ -105,18 +108,25 @@ function Editor(props: EditorProps) {
   const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1)
 
   return (
-    <ScrollArea className="isolate size-full">
-      <div className="flex items-stretch min-h-full">
-        <div className="bg-card sticky top-0 left-0 z-10 px-3">
-          <LineNumbers lineNumbers={lineNumbers} />
-        </div>
-        <Textarea
-          className="flex-1 resize-none rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap focus-visible:ring-0 dark:bg-transparent"
-          value={props.value}
-          onChange={(e) => props.onChange(e.target.value)}
-        />
+    <Card className="size-full gap-0 overflow-clip p-0">
+      <div className="border-b px-3 py-1">
+        <h2 className="text-muted-foreground text-sm font-semibold uppercase">
+          {props.title}
+        </h2>
       </div>
-    </ScrollArea>
+      <ScrollArea className="isolate min-h-0 flex-1">
+        <div className="flex min-h-full items-stretch">
+          <div className="bg-card sticky top-0 left-0 z-10 px-3">
+            <LineNumbers lineNumbers={lineNumbers} />
+          </div>
+          <Textarea
+            className="flex-1 resize-none rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap focus-visible:ring-0 dark:bg-transparent"
+            value={props.value}
+            onChange={(e) => props.onChange(e.target.value)}
+          />
+        </div>
+      </ScrollArea>
+    </Card>
   )
 }
 
@@ -129,35 +139,42 @@ function Viewer(props: ViewerProps) {
   const diffText = diffs.map((line) => `${line.type} ${line.text}`).join('')
 
   return (
-    <ScrollArea className="relative isolate size-full">
-      <div className="absolute top-0 right-0 z-10 p-2">
-        <CopyButton text={diffText} />
+    <Card className="size-full gap-0 overflow-clip p-0">
+      <div className="border-b px-3 py-1">
+        <h2 className="text-muted-foreground text-sm font-semibold uppercase">
+          Difference
+        </h2>
       </div>
-      <div className="flex items-stretch min-h-full">
-        <div className="bg-card sticky top-0 left-0 z-10 grid shrink-0 grid-cols-2 gap-2 px-3">
-          <LineNumbers lineNumbers={diffs.map((l) => l.originalLine)} />
-          <LineNumbers lineNumbers={diffs.map((l) => l.modifiedLine)} />
+      <ScrollArea className="isolate size-full">
+        {/* <div className="absolute top-0 right-0 z-10 p-2">
+          <CopyButton text={diffText} />
+        </div> */}
+        <div className="flex min-h-full items-stretch">
+          <div className="bg-card sticky top-0 left-0 z-10 grid shrink-0 grid-cols-2 gap-2 px-3">
+            <LineNumbers lineNumbers={diffs.map((l) => l.originalLine)} />
+            <LineNumbers lineNumbers={diffs.map((l) => l.modifiedLine)} />
+          </div>
+          <pre className="relative flex-1 text-sm leading-5 select-none">
+            {diffs.map((line, index) => (
+              <div
+                className={cn(
+                  line.type === '+' && 'text-term-green bg-term-green/5',
+                  line.type === '-' && 'text-term-red bg-term-red/5',
+                )}
+                key={index}
+              >
+                {line.type} {line.text}
+              </div>
+            ))}
+            <Textarea
+              className="absolute inset-0 resize-none overflow-clip rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap text-transparent focus-visible:ring-0 dark:bg-transparent"
+              value={diffText}
+              readOnly
+            />
+          </pre>
         </div>
-        <pre className="relative flex-1 text-sm leading-5 select-none">
-          {diffs.map((line, index) => (
-            <div
-              className={cn(
-                line.type === '+' && 'text-term-green bg-term-green/5',
-                line.type === '-' && 'text-term-red bg-term-red/5',
-              )}
-              key={index}
-            >
-              {line.type} {line.text}
-            </div>
-          ))}
-          <Textarea
-            className="absolute inset-0 resize-none overflow-clip rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap text-transparent focus-visible:ring-0 dark:bg-transparent"
-            value={diffText}
-            readOnly
-          />
-        </pre>
-      </div>
-    </ScrollArea>
+      </ScrollArea>
+    </Card>
   )
 }
 
