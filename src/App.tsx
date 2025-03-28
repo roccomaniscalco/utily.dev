@@ -146,9 +146,6 @@ function Viewer(props: ViewerProps) {
         </h2>
       </div>
       <ScrollArea className="isolate size-full">
-        {/* <div className="absolute top-0 right-0 z-10 p-2">
-          <CopyButton text={diffText} />
-        </div> */}
         <div className="flex min-h-full items-stretch">
           <div className="bg-card sticky top-0 left-0 z-10 grid shrink-0 grid-cols-2 gap-2 px-3">
             <LineNumbers lineNumbers={diffs.map((l) => l.originalLine)} />
@@ -193,28 +190,5 @@ function LineNumbers(props: LineNumbersProps) {
         </li>
       ))}
     </ol>
-  )
-}
-
-type CopyButtonProps = Readonly<{
-  text: string
-}>
-function CopyButton(props: CopyButtonProps) {
-  const [copied, setCopied] = useState(false)
-
-  const handleClick = () => {
-    navigator.clipboard.writeText(props.text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <Button variant="outline" size="icon" onClick={handleClick}>
-      {copied ? (
-        <Check className="animate-in fade-in duration-200" />
-      ) : (
-        <Copy className="animate-in fade-in duration-200" />
-      )}
-    </Button>
   )
 }
