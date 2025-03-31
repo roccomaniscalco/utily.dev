@@ -20,7 +20,8 @@ function ScrollArea({
     >
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
-        className="size-full outline-none [&>div]:size-full scroll-p-10"
+        className="size-full scroll-pt-10 scroll-pr-10 scroll-pb-10 outline-none [&>div]:size-full"
+        style={{ scrollPaddingLeft: horizontalScrollOffset ?? undefined }}
       >
         {children}
       </ScrollAreaPrimitive.Viewport>
