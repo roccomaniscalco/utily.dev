@@ -1,4 +1,3 @@
-
 features
 [ ] persistence
 [ ] file upload
@@ -15,6 +14,6 @@ editor
 [ ] show diff in scrollbar
 
 options
-[ ] hide whitespace 
+[ ] hide whitespace
 [ ] auto diff
 [ ] unfied/split
