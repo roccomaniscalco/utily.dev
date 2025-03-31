@@ -1,3 +1,4 @@
+import { useMeasure } from '@uidotdev/usehooks'
 import { diffLines } from 'diff'
 import { useDeferredValue, useState } from 'react'
 import { Card } from '~/components/ui/card'
@@ -116,6 +117,8 @@ function Editor(props: EditorProps) {
   const lineCount = props.value.split('\n').length
   const lineNumbers = Array.from({ length: lineCount }, (_, i) => i + 1)
 
+  const [lineNumbersRef, { width: lineNumbersWidth }] = useMeasure()
+
   return (
     <Card className="size-full gap-0 overflow-clip p-0">
       <div className="border-b px-3 py-1">
@@ -123,9 +126,15 @@ function Editor(props: EditorProps) {
           {props.title}
         </h2>
       </div>
-      <ScrollArea className="isolate min-h-0 flex-1">
+      <ScrollArea
+        className="isolate min-h-0 flex-1"
+        horizontalScrollOffset={lineNumbersWidth}
+      >
         <div className="flex min-h-full items-stretch">
-          <div className="bg-card sticky top-0 left-0 z-10 px-3">
+          <div
+            className="bg-card sticky top-0 left-0 z-10 px-3"
+            ref={lineNumbersRef}
+          >
             <LineNumbers lineNumbers={lineNumbers} />
           </div>
           <Textarea
@@ -149,19 +158,27 @@ function Viewer(props: ViewerProps) {
     .map((line) => `${line.type} ${line.text}`)
     .join('')
 
+  const [lineNumbersRef, { width: lineNumbersWidth }] = useMeasure()
+
   return (
     <Card className="size-full gap-0 overflow-clip p-0">
       <div className="flex justify-between gap-3 border-b px-3 py-1">
         <h2 className="text-muted-foreground text-sm font-semibold uppercase">
           Difference
         </h2>
-        <div className="flex items-center gap-1.5 text-sm tabular-nums">
+        <div
+          className="flex items-center gap-1.5 text-sm tabular-nums"
+          ref={lineNumbersRef}
+        >
           <p className="text-term-green">+{diff.added}</p>
           <p className="text-muted-foreground">/</p>
           <p className="text-term-red">-{diff.removed}</p>
         </div>
       </div>
-      <ScrollArea className="isolate min-h-0 flex-1">
+      <ScrollArea
+        className="isolate min-h-0 flex-1"
+        horizontalScrollOffset={lineNumbersWidth}
+      >
         <div className="flex min-h-full items-stretch">
           <div className="bg-card sticky top-0 left-0 z-10 grid shrink-0 grid-cols-2 gap-2 px-3">
             <LineNumbers lineNumbers={diff.lines.map((l) => l.originalLine)} />
