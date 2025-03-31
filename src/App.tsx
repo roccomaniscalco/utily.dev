@@ -138,7 +138,7 @@ function Editor(props: EditorProps) {
             <LineNumbers lineNumbers={lineNumbers} />
           </div>
           <Textarea
-            className="flex-1 resize-none rounded-none border-none p-0 pr-10 font-mono text-sm leading-5 text-nowrap focus-visible:ring-0 dark:bg-transparent"
+            className="flex-1 resize-none rounded-none border-none p-0 pr-10 pb-10 font-mono text-sm leading-5 text-nowrap focus-visible:ring-0 dark:bg-transparent"
             value={props.value}
             onChange={(e) => props.onChange(e.target.value)}
           />
@@ -188,8 +188,9 @@ function Viewer(props: ViewerProps) {
             {diff.lines.map((line, index) => (
               <div
                 className={cn(
-                  line.type === '+' && 'text-term-green bg-term-green/5 pr-10',
-                  line.type === '-' && 'text-term-red bg-term-red/5 pr-10',
+                  "pr-10",
+                  line.type === '+' && 'text-term-green bg-term-green/5',
+                  line.type === '-' && 'text-term-red bg-term-red/5',
                 )}
                 key={index}
               >

@@ -20,7 +20,7 @@ function ScrollArea({
     >
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
-        className="size-full outline-none [&>div]:size-full"
+        className="size-full outline-none [&>div]:size-full scroll-p-10"
       >
         {children}
       </ScrollAreaPrimitive.Viewport>
