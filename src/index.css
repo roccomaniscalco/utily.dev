@@ -75,7 +75,7 @@
   --accent: red;
   --accent-foreground: var(--term-blue);
   --destructive: var(--term-red);
-  --border: oklch(from var(--term-fg-100) l c h / 10%);
+  --border: oklch(from var(--term-fg-400) l c h / 20%);
 
   --input: var(--term-bg-100);
 

@@ -46,9 +46,9 @@ function ScrollBar({
       className={cn(
         'flex touch-none transition-colors select-none',
         orientation === 'vertical' &&
-          'h-full w-3 border-l border-l-transparent',
+          'h-full w-4 border-l border-l-transparent',
         orientation === 'horizontal' &&
-          'h-3 flex-col border-t border-t-transparent',
+          'h-4 flex-col border-t border-t-transparent',
         className,
       )}
       style={{ paddingLeft: offset ?? undefined }}
