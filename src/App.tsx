@@ -1,7 +1,7 @@
 import { useLocalStorage, useMeasure } from '@uidotdev/usehooks'
 import { diffLines } from 'diff'
 import { useDeferredValue, useState } from 'react'
-import { Card } from '~/components/ui/card'
+import { Card, CardHeader, CardTitle } from '~/components/ui/card'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -120,12 +120,10 @@ function Editor(props: EditorProps) {
   const [lineNumbersRef, { width: lineNumbersWidth }] = useMeasure()
 
   return (
-    <Card className="size-full gap-0 overflow-clip p-0">
-      <div className="border-b px-3 py-1">
-        <h2 className="text-muted-foreground text-sm font-semibold uppercase">
-          {props.title}
-        </h2>
-      </div>
+    <Card className="size-full">
+      <CardHeader>
+        <CardTitle>{props.title}</CardTitle>
+      </CardHeader>
       <ScrollArea
         className="isolate min-h-0 flex-1"
         horizontalScrollOffset={lineNumbersWidth}
@@ -161,17 +159,15 @@ function Viewer(props: ViewerProps) {
   const [lineNumbersRef, { width: lineNumbersWidth }] = useMeasure()
 
   return (
-    <Card className="size-full gap-0 overflow-clip p-0">
-      <div className="flex justify-between gap-3 border-b px-3 py-1">
-        <h2 className="text-muted-foreground text-sm font-semibold uppercase">
-          Difference
-        </h2>
+    <Card className="size-full">
+      <CardHeader>
+        <CardTitle>Difference</CardTitle>
         <div className="flex items-center gap-1.5 text-sm tabular-nums">
           <p className="text-term-green">+{diff.added}</p>
           <p className="text-muted-foreground">/</p>
           <p className="text-term-red">-{diff.removed}</p>
         </div>
-      </div>
+      </CardHeader>
       <ScrollArea
         className="isolate min-h-0 flex-1"
         horizontalScrollOffset={lineNumbersWidth}
