@@ -1,5 +1,5 @@
 features
-[ ] persistence
+[x] persistence
 [ ] file upload
 [x] added/removed count
 

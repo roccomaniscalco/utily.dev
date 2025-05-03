@@ -1,4 +1,4 @@
-import { useMeasure } from '@uidotdev/usehooks'
+import { useLocalStorage, useMeasure } from '@uidotdev/usehooks'
 import { diffLines } from 'diff'
 import { useDeferredValue, useState } from 'react'
 import { Card } from '~/components/ui/card'
@@ -67,8 +67,8 @@ function computeDiff(originalText: string, modifiedText: string) {
 }
 
 export default function TextDiffApp() {
-  const [originalText, setOriginalText] = useState('')
-  const [modifiedText, setModifiedText] = useState('')
+  const [originalText, setOriginalText] = useLocalStorage('originalText', '')
+  const [modifiedText, setModifiedText] = useLocalStorage('modifiedText', '')
 
   const deferredOriginalText = useDeferredValue(originalText)
   const deferredModifiedText = useDeferredValue(modifiedText)
@@ -188,7 +188,7 @@ function Viewer(props: ViewerProps) {
             {diff.lines.map((line, index) => (
               <div
                 className={cn(
-                  "pr-10",
+                  'pr-10',
                   line.type === '+' && 'text-term-green bg-term-green/5',
                   line.type === '-' && 'text-term-red bg-term-red/5',
                 )}
