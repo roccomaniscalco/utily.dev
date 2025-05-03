@@ -1,6 +1,6 @@
 import { useLocalStorage, useMeasure } from '@uidotdev/usehooks'
 import { diffLines } from 'diff'
-import { useDeferredValue, useState } from 'react'
+import { useDeferredValue } from 'react'
 import { Card, CardHeader, CardTitle } from '~/components/ui/card'
 import {
   ResizableHandle,
