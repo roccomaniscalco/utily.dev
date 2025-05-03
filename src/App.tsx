@@ -69,10 +69,7 @@ function computeDiff(originalText: string, modifiedText: string) {
 export default function TextDiffApp() {
   const [originalText, setOriginalText] = useLocalStorage('originalText', '')
   const [modifiedText, setModifiedText] = useLocalStorage('modifiedText', '')
-  const [shouldWrapLines, setShouldWrapLines] = useLocalStorage(
-    'shouldWrapLines',
-    false,
-  )
+  const [wrapLines, setWrapLines] = useLocalStorage('wrapLines', false)
 
   const deferredOriginalText = useDeferredValue(originalText)
   const deferredModifiedText = useDeferredValue(modifiedText)
@@ -104,7 +101,7 @@ export default function TextDiffApp() {
       <ResizableHandle />
       <ResizablePanel>
         <Viewer
-          shouldWrapLines={shouldWrapLines}
+          shouldWrapLines={wrapLines}
           originalText={deferredOriginalText}
           modifiedText={deferredModifiedText}
         />
