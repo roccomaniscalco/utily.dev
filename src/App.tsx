@@ -1,6 +1,6 @@
 import { useLocalStorage, useMeasure } from '@uidotdev/usehooks'
 import { diffLines } from 'diff'
-import { useDeferredValue } from 'react'
+import { Fragment, useDeferredValue } from 'react'
 import { Card, CardHeader, CardTitle } from '~/components/ui/card'
 import {
   ResizableHandle,
@@ -69,6 +69,10 @@ function computeDiff(originalText: string, modifiedText: string) {
 export default function TextDiffApp() {
   const [originalText, setOriginalText] = useLocalStorage('originalText', '')
   const [modifiedText, setModifiedText] = useLocalStorage('modifiedText', '')
+  const [shouldWrapLines, setShouldWrapLines] = useLocalStorage(
+    'shouldWrapLines',
+    false,
+  )
 
   const deferredOriginalText = useDeferredValue(originalText)
   const deferredModifiedText = useDeferredValue(modifiedText)
@@ -100,6 +104,7 @@ export default function TextDiffApp() {
       <ResizableHandle />
       <ResizablePanel>
         <Viewer
+          shouldWrapLines={shouldWrapLines}
           originalText={deferredOriginalText}
           modifiedText={deferredModifiedText}
         />
@@ -149,7 +154,9 @@ function Editor(props: EditorProps) {
 type ViewerProps = Readonly<{
   originalText: string
   modifiedText: string
+  shouldWrapLines: boolean
 }>
+
 function Viewer(props: ViewerProps) {
   const diff = computeDiff(props.originalText, props.modifiedText)
   const diffText = diff.lines
@@ -169,36 +176,37 @@ function Viewer(props: ViewerProps) {
         </div>
       </CardHeader>
       <ScrollArea
-        className="isolate min-h-0 flex-1"
+        className="min-h-0 flex-1"
         horizontalScrollOffset={lineNumbersWidth}
       >
-        <div className="flex min-h-full items-stretch">
-          <div
-            className="bg-card sticky top-0 left-0 z-10 grid shrink-0 grid-cols-2 gap-2 px-3"
-            ref={lineNumbersRef}
-          >
-            <LineNumbers lineNumbers={diff.lines.map((l) => l.originalLine)} />
-            <LineNumbers lineNumbers={diff.lines.map((l) => l.modifiedLine)} />
-          </div>
-          <pre className="relative flex-1 text-sm leading-5 select-none">
-            {diff.lines.map((line, index) => (
+        <div className="grid min-h-full flex-1 grid-cols-[min-content_1fr] content-start">
+          {diff.lines.map((line, index) => (
+            <Fragment key={index}>
               <div
+                className="bg-card sticky left-0 grid grid-cols-[min-content_auto] gap-2 px-3 select-none"
+                ref={index === 0 ? lineNumbersRef : undefined}
+              >
+                <p className="text-muted-foreground text-end font-mono text-sm leading-5">
+                  {line.originalLine}
+                </p>
+                <p className="text-muted-foreground text-end font-mono text-sm leading-5">
+                  {line.modifiedLine}
+                </p>
+              </div>
+              <pre
                 className={cn(
-                  'pr-10',
+                  'font-mono text-sm leading-5',
+                  props.shouldWrapLines
+                    ? 'break-all whitespace-pre-wrap'
+                    : 'pr-10',
                   line.type === '+' && 'text-term-green bg-term-green/5',
                   line.type === '-' && 'text-term-red bg-term-red/5',
                 )}
-                key={index}
               >
                 {line.type} {line.text}
-              </div>
-            ))}
-            <Textarea
-              className="absolute inset-0 resize-none overflow-clip rounded-none border-none p-0 font-mono text-sm leading-5 text-nowrap text-transparent focus-visible:ring-0 dark:bg-transparent"
-              value={diffText}
-              readOnly
-            />
-          </pre>
+              </pre>
+            </Fragment>
+          ))}
         </div>
       </ScrollArea>
     </Card>
