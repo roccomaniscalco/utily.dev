@@ -166,10 +166,7 @@ function Viewer(props: ViewerProps) {
         <h2 className="text-muted-foreground text-sm font-semibold uppercase">
           Difference
         </h2>
-        <div
-          className="flex items-center gap-1.5 text-sm tabular-nums"
-          ref={lineNumbersRef}
-        >
+        <div className="flex items-center gap-1.5 text-sm tabular-nums">
           <p className="text-term-green">+{diff.added}</p>
           <p className="text-muted-foreground">/</p>
           <p className="text-term-red">-{diff.removed}</p>
@@ -180,7 +177,10 @@ function Viewer(props: ViewerProps) {
         horizontalScrollOffset={lineNumbersWidth}
       >
         <div className="flex min-h-full items-stretch">
-          <div className="bg-card sticky top-0 left-0 z-10 grid shrink-0 grid-cols-2 gap-2 px-3">
+          <div
+            className="bg-card sticky top-0 left-0 z-10 grid shrink-0 grid-cols-2 gap-2 px-3"
+            ref={lineNumbersRef}
+          >
             <LineNumbers lineNumbers={diff.lines.map((l) => l.originalLine)} />
             <LineNumbers lineNumbers={diff.lines.map((l) => l.modifiedLine)} />
           </div>
