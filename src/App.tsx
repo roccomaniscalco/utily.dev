@@ -183,7 +183,7 @@ function Viewer(props: ViewerProps) {
           {diff.lines.map((line, index) => (
             <Fragment key={index}>
               <div
-                className="bg-card sticky left-0 grid grid-cols-[min-content_auto] gap-2 px-3 select-none"
+                className="bg-card sticky left-0 grid grid-cols-[1fr_1fr] gap-2 px-3 select-none"
                 ref={index === 0 ? lineNumbersRef : undefined}
               >
                 <p className="text-muted-foreground text-end font-mono text-sm leading-5">
