@@ -17,4 +17,4 @@ options
 [ ] hide whitespace
 [ ] auto diff
 [ ] unfied/split
-[ ] line wrapping
+[x] line wrapping
