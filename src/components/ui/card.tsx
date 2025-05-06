@@ -20,7 +20,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card-header"
       className={cn(
-        'flex h-8 items-center justify-between gap-3 border-b px-3 py-1',
+        'flex h-8 items-center justify-between gap-3 border-b pl-3 pr-2 py-1',
         className,
       )}
       {...props}
@@ -56,7 +56,7 @@ function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card-action"
       className={cn(
-        'col-start-2 row-span-2 row-start-1 self-start justify-self-end',
+        'flex gap-3',
         className,
       )}
       {...props}

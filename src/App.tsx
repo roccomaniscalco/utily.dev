@@ -1,7 +1,17 @@
 import { useLocalStorage, useMeasure } from '@uidotdev/usehooks'
 import { diffLines } from 'diff'
+import { SettingsIcon } from 'lucide-react'
 import { Fragment, useDeferredValue } from 'react'
-import { Card, CardHeader, CardTitle } from '~/components/ui/card'
+import { Button } from '~/components/ui/button'
+import { Card, CardAction, CardHeader, CardTitle } from '~/components/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -101,7 +111,8 @@ export default function TextDiffApp() {
       <ResizableHandle />
       <ResizablePanel>
         <Viewer
-          shouldWrapLines={wrapLines}
+          wrapLines={wrapLines}
+          setWrapLines={setWrapLines}
           originalText={deferredOriginalText}
           modifiedText={deferredModifiedText}
         />
@@ -151,7 +162,8 @@ function Editor(props: EditorProps) {
 type ViewerProps = Readonly<{
   originalText: string
   modifiedText: string
-  shouldWrapLines: boolean
+  wrapLines: boolean
+  setWrapLines: (value: boolean) => void
 }>
 
 function Viewer(props: ViewerProps) {
@@ -166,11 +178,17 @@ function Viewer(props: ViewerProps) {
     <Card className="size-full">
       <CardHeader>
         <CardTitle>Difference</CardTitle>
-        <div className="flex items-center gap-1.5 text-sm tabular-nums">
-          <p className="text-term-green">+{diff.added}</p>
-          <p className="text-muted-foreground">/</p>
-          <p className="text-term-red">-{diff.removed}</p>
-        </div>
+        <CardAction>
+          <div className="flex items-center gap-1.5 text-sm tabular-nums">
+            <p className="text-term-green">+{diff.added}</p>
+            <p className="text-muted-foreground">/</p>
+            <p className="text-term-red">-{diff.removed}</p>
+          </div>
+          <DiffSettingsMenu
+            wrapLines={props.wrapLines}
+            setWrapLines={props.setWrapLines}
+          />
+        </CardAction>
       </CardHeader>
       <ScrollArea
         className="min-h-0 flex-1"
@@ -193,7 +211,7 @@ function Viewer(props: ViewerProps) {
               <pre
                 className={cn(
                   'font-mono text-sm leading-5',
-                  props.shouldWrapLines
+                  props.wrapLines
                     ? 'break-all whitespace-pre-wrap'
                     : 'pr-10',
                   line.type === '+' && 'text-term-green bg-term-green/5',
@@ -225,5 +243,32 @@ function LineNumbers(props: LineNumbersProps) {
         </li>
       ))}
     </ol>
+  )
+}
+
+type DiffSettingsProps = Readonly<{
+  wrapLines: boolean
+  setWrapLines: (value: boolean) => void
+}>
+
+function DiffSettingsMenu(props: DiffSettingsProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <SettingsIcon />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Diff Settings</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuCheckboxItem
+          checked={props.wrapLines}
+          onCheckedChange={props.setWrapLines}
+        >
+          Wrap Lines
+        </DropdownMenuCheckboxItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
