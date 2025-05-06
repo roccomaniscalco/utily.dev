@@ -168,9 +168,6 @@ type ViewerProps = Readonly<{
 
 function Viewer(props: ViewerProps) {
   const diff = computeDiff(props.originalText, props.modifiedText)
-  const diffText = diff.lines
-    .map((line) => `${line.type} ${line.text}`)
-    .join('')
 
   const [lineNumbersRef, { width: lineNumbersWidth }] = useMeasure()
 
@@ -211,9 +208,7 @@ function Viewer(props: ViewerProps) {
               <pre
                 className={cn(
                   'font-mono text-sm leading-5',
-                  props.wrapLines
-                    ? 'break-all whitespace-pre-wrap'
-                    : 'pr-10',
+                  props.wrapLines ? 'break-all whitespace-pre-wrap' : 'pr-10',
                   line.type === '+' && 'text-term-green bg-term-green/5',
                   line.type === '-' && 'text-term-red bg-term-red/5',
                 )}
