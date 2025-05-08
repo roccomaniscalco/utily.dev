@@ -4,7 +4,7 @@ features
 [x] added/removed count
 
 editor
-[x] cmd+a result
+[ ] cmd+a result
 [ ] syntax highlighting (bonus for auto-detect)
 [x] line numbers
 [x] line numbers that don't suck
@@ -15,6 +15,6 @@ editor
 
 options
 [ ] hide whitespace
-[ ] auto diff
+[x] auto diff
 [ ] unfied/split
 [x] line wrapping
