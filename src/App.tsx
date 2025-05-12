@@ -5,7 +5,7 @@ import {
   EyeClosedIcon,
   SettingsIcon,
   SquareIcon,
-  WrapTextIcon
+  WrapTextIcon,
 } from 'lucide-react'
 import { Dispatch, Fragment, SetStateAction, useDeferredValue } from 'react'
 import { Button } from '~/components/ui/button'
