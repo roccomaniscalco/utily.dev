@@ -72,8 +72,8 @@
   --secondary-foreground: var(--term-fg-100);
   --muted: red;
   --muted-foreground: var(--term-fg-400);
-  --accent: red;
-  --accent-foreground: var(--term-blue);
+  --accent: var(--term-bg-200);
+  --accent-foreground: var(--term-fg-100);
   --destructive: var(--term-red);
   --border: oklch(from var(--term-fg-400) l c h / 20%);
 

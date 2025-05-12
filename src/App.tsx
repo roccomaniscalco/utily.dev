@@ -2,8 +2,10 @@ import { useLocalStorage, useMeasure } from '@uidotdev/usehooks'
 import { diffLines } from 'diff'
 import {
   CircleMinusIcon,
+  Columns2Icon,
   SettingsIcon,
-  WrapTextIcon
+  SquareIcon,
+  WrapTextIcon,
 } from 'lucide-react'
 import { Dispatch, Fragment, SetStateAction, useDeferredValue } from 'react'
 import { Button } from '~/components/ui/button'
@@ -12,9 +14,10 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import {
   ResizableHandle,
@@ -88,10 +91,12 @@ function computeDiff(
 type DiffSettings = {
   ignoreWhitespace: boolean
   wrapLines: boolean
+  displayMode: 'unified' | 'split'
 }
 const defaultDiffSettings: DiffSettings = {
   ignoreWhitespace: false,
   wrapLines: false,
+  displayMode: 'unified',
 }
 
 export default function TextDiffApp() {
@@ -275,10 +280,39 @@ function DiffSettingsMenu(props: DiffSettingsProps) {
           <SettingsIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" alignOffset={0}>
-        <DropdownMenuLabel className="flex items-center gap-2">
-          Diff Settings
-        </DropdownMenuLabel>
+      <DropdownMenuContent
+        align="end"
+        alignOffset={-9}
+        sideOffset={6}
+        className="rounded-tr-none"
+      >
+        <DropdownMenuRadioGroup value={props.diffSettings.displayMode}>
+          <DropdownMenuRadioItem
+            value="unified"
+            onSelect={() =>
+              props.setDiffSettings((prev) => ({
+                ...prev,
+                displayMode: 'unified',
+              }))
+            }
+          >
+            Unified
+            <SquareIcon />
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem
+            value="split"
+            disabled
+            onSelect={() => {
+              props.setDiffSettings((prev) => ({
+                ...prev,
+                displayMode: 'split',
+              }))
+            }}
+          >
+            Split
+            <Columns2Icon />
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
         <DropdownMenuCheckboxItem
           checked={props.diffSettings.wrapLines}
