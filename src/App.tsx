@@ -1,11 +1,11 @@
 import { useLocalStorage, useMeasure } from '@uidotdev/usehooks'
 import { diffLines } from 'diff'
 import {
-  CircleMinusIcon,
   Columns2Icon,
+  EyeClosedIcon,
   SettingsIcon,
   SquareIcon,
-  WrapTextIcon,
+  WrapTextIcon
 } from 'lucide-react'
 import { Dispatch, Fragment, SetStateAction, useDeferredValue } from 'react'
 import { Button } from '~/components/ui/button'
@@ -267,12 +267,12 @@ function LineNumbers(props: LineNumbersProps) {
   )
 }
 
-type DiffSettingsProps = Readonly<{
+type DiffSettingsMenuProps = Readonly<{
   diffSettings: DiffSettings
   setDiffSettings: Dispatch<SetStateAction<DiffSettings>>
 }>
 
-function DiffSettingsMenu(props: DiffSettingsProps) {
+function DiffSettingsMenu(props: DiffSettingsMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -335,8 +335,8 @@ function DiffSettingsMenu(props: DiffSettingsProps) {
             }))
           }
         >
-          Ignore Whitespace
-          <CircleMinusIcon />
+          Hide Whitespace
+          <EyeClosedIcon />
         </DropdownMenuCheckboxItem>
       </DropdownMenuContent>
     </DropdownMenu>
