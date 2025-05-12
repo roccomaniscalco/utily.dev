@@ -2,9 +2,8 @@ import { useLocalStorage, useMeasure } from '@uidotdev/usehooks'
 import { diffLines } from 'diff'
 import {
   CircleMinusIcon,
-  CommandIcon,
   SettingsIcon,
-  WrapTextIcon,
+  WrapTextIcon
 } from 'lucide-react'
 import { Dispatch, Fragment, SetStateAction, useDeferredValue } from 'react'
 import { Button } from '~/components/ui/button'
@@ -15,8 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '~/components/ui/dropdown-menu'
 import {
   ResizableHandle,
