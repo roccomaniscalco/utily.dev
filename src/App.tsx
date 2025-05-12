@@ -1,7 +1,12 @@
 import { useLocalStorage, useMeasure } from '@uidotdev/usehooks'
 import { diffLines } from 'diff'
-import { SettingsIcon } from 'lucide-react'
-import { Fragment, useDeferredValue } from 'react'
+import {
+  CircleMinusIcon,
+  CommandIcon,
+  SettingsIcon,
+  WrapTextIcon,
+} from 'lucide-react'
+import { Dispatch, Fragment, SetStateAction, useDeferredValue } from 'react'
 import { Button } from '~/components/ui/button'
 import { Card, CardAction, CardHeader, CardTitle } from '~/components/ui/card'
 import {
@@ -10,6 +15,7 @@ import {
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu'
 import {
@@ -32,9 +38,14 @@ type Diff = {
   }[]
 }
 
-function computeDiff(originalText: string, modifiedText: string) {
+function computeDiff(
+  originalText: string,
+  modifiedText: string,
+  options?: { ignoreWhitespace?: boolean },
+) {
   const changes = diffLines(originalText, modifiedText, {
     oneChangePerToken: true, // split changes by line instead of by type of change
+    ignoreWhitespace: options?.ignoreWhitespace,
   })
 
   const diff: Diff = {
@@ -76,10 +87,22 @@ function computeDiff(originalText: string, modifiedText: string) {
   return diff
 }
 
+type DiffSettings = {
+  ignoreWhitespace: boolean
+  wrapLines: boolean
+}
+const defaultDiffSettings: DiffSettings = {
+  ignoreWhitespace: false,
+  wrapLines: false,
+}
+
 export default function TextDiffApp() {
   const [originalText, setOriginalText] = useLocalStorage('originalText', '')
   const [modifiedText, setModifiedText] = useLocalStorage('modifiedText', '')
-  const [wrapLines, setWrapLines] = useLocalStorage('wrapLines', false)
+  const [diffSettings, setDiffSettings] = useLocalStorage(
+    'diffSettings',
+    defaultDiffSettings,
+  )
 
   const deferredOriginalText = useDeferredValue(originalText)
   const deferredModifiedText = useDeferredValue(modifiedText)
@@ -111,8 +134,8 @@ export default function TextDiffApp() {
       <ResizableHandle />
       <ResizablePanel>
         <Viewer
-          wrapLines={wrapLines}
-          setWrapLines={setWrapLines}
+          diffSettings={diffSettings}
+          setDiffSettings={setDiffSettings}
           originalText={deferredOriginalText}
           modifiedText={deferredModifiedText}
         />
@@ -162,12 +185,14 @@ function Editor(props: EditorProps) {
 type ViewerProps = Readonly<{
   originalText: string
   modifiedText: string
-  wrapLines: boolean
-  setWrapLines: (value: boolean) => void
+  diffSettings: DiffSettings
+  setDiffSettings: Dispatch<SetStateAction<DiffSettings>>
 }>
 
 function Viewer(props: ViewerProps) {
-  const diff = computeDiff(props.originalText, props.modifiedText)
+  const diff = computeDiff(props.originalText, props.modifiedText, {
+    ignoreWhitespace: props.diffSettings.ignoreWhitespace,
+  })
 
   const [lineNumbersRef, { width: lineNumbersWidth }] = useMeasure()
 
@@ -182,8 +207,8 @@ function Viewer(props: ViewerProps) {
             <p className="text-term-red">-{diff.removed}</p>
           </div>
           <DiffSettingsMenu
-            wrapLines={props.wrapLines}
-            setWrapLines={props.setWrapLines}
+            diffSettings={props.diffSettings}
+            setDiffSettings={props.setDiffSettings}
           />
         </CardAction>
       </CardHeader>
@@ -204,7 +229,9 @@ function Viewer(props: ViewerProps) {
               <pre
                 className={cn(
                   'font-mono text-sm leading-5',
-                  props.wrapLines ? 'break-all whitespace-pre-wrap' : 'pr-10',
+                  props.diffSettings.wrapLines
+                    ? 'break-all whitespace-pre-wrap'
+                    : 'pr-10',
                   line.type === '+' && 'text-term-green bg-term-green/5',
                   line.type === '-' && 'text-term-red bg-term-red/5',
                 )}
@@ -238,8 +265,8 @@ function LineNumbers(props: LineNumbersProps) {
 }
 
 type DiffSettingsProps = Readonly<{
-  wrapLines: boolean
-  setWrapLines: (value: boolean) => void
+  diffSettings: DiffSettings
+  setDiffSettings: Dispatch<SetStateAction<DiffSettings>>
 }>
 
 function DiffSettingsMenu(props: DiffSettingsProps) {
@@ -250,14 +277,34 @@ function DiffSettingsMenu(props: DiffSettingsProps) {
           <SettingsIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Diff Settings</DropdownMenuLabel>
+      <DropdownMenuContent align="end" alignOffset={0}>
+        <DropdownMenuLabel className="flex items-center gap-2">
+          Diff Settings
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuCheckboxItem
-          checked={props.wrapLines}
-          onCheckedChange={props.setWrapLines}
+          checked={props.diffSettings.wrapLines}
+          onCheckedChange={(checked) =>
+            props.setDiffSettings((prev) => ({
+              ...prev,
+              wrapLines: checked,
+            }))
+          }
         >
-          Wrap Lines
+          Wrap Text
+          <WrapTextIcon />
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={props.diffSettings.ignoreWhitespace}
+          onCheckedChange={(checked) =>
+            props.setDiffSettings((prev) => ({
+              ...prev,
+              ignoreWhitespace: checked,
+            }))
+          }
+        >
+          Ignore Whitespace
+          <CircleMinusIcon />
         </DropdownMenuCheckboxItem>
       </DropdownMenuContent>
     </DropdownMenu>

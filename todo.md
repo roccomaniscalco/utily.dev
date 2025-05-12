@@ -14,7 +14,7 @@ editor
 [ ] show diff in scrollbar
 
 options
-[ ] hide whitespace
+[x] hide whitespace
 [x] auto diff
 [ ] unfied/split
 [x] line wrapping

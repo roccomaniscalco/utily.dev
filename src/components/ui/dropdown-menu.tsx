@@ -96,7 +96,7 @@ function DropdownMenuCheckboxItem({
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       className={cn(
-        "focus:bg-term-bg-200 focus:text-term-fg-100 relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus:bg-term-bg-200 focus:text-term-fg-100 relative flex cursor-default items-center justify-between gap-6 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       checked={checked}
@@ -147,7 +147,7 @@ function DropdownMenuRadioItem({
   )
 }
 
-function  DropdownMenuLabel({
+function DropdownMenuLabel({
   className,
   inset,
   ...props
@@ -159,7 +159,7 @@ function  DropdownMenuLabel({
       data-slot="dropdown-menu-label"
       data-inset={inset}
       className={cn(
-        'px-2 py-1.5 text-sm font-medium data-[inset]:pl-8',
+        'text-foreground px-2 py-1.5 text-sm font-semibold data-[inset]:pl-8',
         className,
       )}
       {...props}
