@@ -1,5 +1,5 @@
 import { useLocalStorage, useMeasure } from '@uidotdev/usehooks'
-import { diffLines } from 'diff'
+import { Change, diffLines } from 'diff'
 import {
   Columns2Icon,
   EyeClosedIcon,
@@ -86,6 +86,148 @@ function computeDiff(
   }
 
   return diff
+}
+
+type SplitDiff = {
+  added: number
+  removed: number
+  rows: {
+    original: {
+      type: '-' | ' '
+      text: string
+      lineNumber: number | null
+    }
+    modified: {
+      type: '+' | ' '
+      text: string
+      lineNumber: number | null
+    }
+  }[]
+}
+
+function computeSplitDiff(
+  originalText: string,
+  modifiedText: string,
+  options?: { ignoreWhitespace?: boolean },
+) {
+  const changes = diffLines(originalText, modifiedText, {
+    ignoreWhitespace: options?.ignoreWhitespace,
+  })
+
+  const splitDiff: SplitDiff = { added: 0, removed: 0, rows: [] }
+  let originalLineNumber = 0
+  let modifiedLineNumber = 0
+
+  let changeIndex = 0
+  while (changeIndex < changes.length) {
+    const change = changes[changeIndex] as Change
+    const changeType = change.added ? '+' : change.removed ? '-' : ' '
+    const lines = change.value.replace(/\n$/, '').split('\n')
+
+    // Case 1: Unmodified
+    if (changeType === ' ') {
+      for (const line of lines) {
+        splitDiff.rows.push({
+          original: { type: ' ', text: line, lineNumber: ++originalLineNumber },
+          modified: { type: ' ', text: line, lineNumber: ++modifiedLineNumber },
+        })
+      }
+      changeIndex++
+      continue
+    }
+
+    const nextChange = changes[changeIndex + 1]
+    const nextChangeType = nextChange?.added
+      ? '+'
+      : nextChange?.removed
+        ? '-'
+        : ' '
+    const nextChangeLines = nextChange?.value.replace(/\n$/, '').split('\n')
+
+    // Case 2: Added _or_ Removed
+    if (changeType === '+' && nextChangeType === ' ') {
+      for (const line of lines) {
+        splitDiff.rows.push({
+          original: { type: ' ', text: '', lineNumber: null },
+          modified: { type: '+', text: line, lineNumber: ++originalLineNumber },
+        })
+      }
+      splitDiff.added += lines.length
+      changeIndex += 1
+      continue
+    }
+    if (changeType === '-' && nextChangeType === ' ') {
+      for (const line of lines) {
+        splitDiff.rows.push({
+          original: { type: '-', text: line, lineNumber: ++modifiedLineNumber },
+          modified: { type: ' ', text: '', lineNumber: null },
+        })
+      }
+      splitDiff.removed += lines.length
+      changeIndex += 1
+      continue
+    }
+
+    const numRows = Math.max(lines.length, nextChangeLines?.length ?? 0)
+
+    // Case 3: Added _and_ Removed (Modification)
+    if (changeType === '+' && nextChangeType === '-') {
+      for (let i = 0; i < numRows; i++) {
+        const line = lines[i] ?? ''
+        const lineType = line ? '+' : ' '
+        const nextLine = nextChangeLines?.[i] ?? ''
+        const nextLineType = nextLine ? '-' : ' '
+
+        splitDiff.rows.push({
+          original: {
+            type: nextLineType,
+            text: nextLine,
+            lineNumber: ++modifiedLineNumber,
+          },
+          modified: {
+            type: lineType,
+            text: line,
+            lineNumber: ++originalLineNumber,
+          },
+        })
+      }
+      splitDiff.added += lines.length
+      // @ts-expect-error nextChangeLines should be defined here
+      splitDiff.removed += nextChangeLines.length
+      changeIndex += 2
+      continue
+    }
+    if (changeType === '-' && nextChangeType === '+') {
+      for (let i = 0; i < numRows; i++) {
+        const line = lines[i] ?? ''
+        const lineType = line ? '-' : ' '
+        const nextLine = nextChangeLines?.[i] ?? ''
+        const nextLineType = nextLine ? '+' : ' '
+
+        splitDiff.rows.push({
+          original: {
+            type: lineType,
+            text: line,
+            lineNumber: ++originalLineNumber,
+          },
+          modified: {
+            type: nextLineType,
+            text: nextLine,
+            lineNumber: ++modifiedLineNumber,
+          },
+        })
+      }
+      splitDiff.removed += lines.length
+      // @ts-expect-error nextChangeLines should be defined here
+      splitDiff.added += nextChangeLines.length
+      changeIndex += 2
+      continue
+    }
+
+    throw new Error('Invalid diff state')
+  }
+
+  return splitDiff
 }
 
 type DiffSettings = {
@@ -191,8 +333,14 @@ type ViewerProps = Readonly<{
   diffSettings: DiffSettings
   setDiffSettings: Dispatch<SetStateAction<DiffSettings>>
 }>
-
 function Viewer(props: ViewerProps) {
+  return {
+    unified: <UnifiedViewer {...props} />,
+    split: <SplitViewer {...props} />,
+  }[props.diffSettings.displayMode]
+}
+
+function UnifiedViewer(props: ViewerProps) {
   const diff = computeDiff(props.originalText, props.modifiedText, {
     ignoreWhitespace: props.diffSettings.ignoreWhitespace,
   })
@@ -240,6 +388,77 @@ function Viewer(props: ViewerProps) {
                 )}
               >
                 {line.type} {line.text}
+              </pre>
+            </Fragment>
+          ))}
+        </div>
+      </ScrollArea>
+    </Card>
+  )
+}
+
+function SplitViewer(props: ViewerProps) {
+  const diff = computeSplitDiff(props.originalText, props.modifiedText, {
+    ignoreWhitespace: props.diffSettings.ignoreWhitespace,
+  })
+
+  return (
+    <Card className="size-full">
+      <CardHeader>
+        <CardTitle>Difference</CardTitle>
+        <CardAction>
+          <div className="flex items-center gap-1.5 text-sm tabular-nums">
+            <p className="text-term-green">+{diff.added}</p>
+            <p className="text-muted-foreground">/</p>
+            <p className="text-term-red">-{diff.removed}</p>
+          </div>
+          <DiffSettingsMenu
+            diffSettings={props.diffSettings}
+            setDiffSettings={props.setDiffSettings}
+          />
+        </CardAction>
+      </CardHeader>
+      <ScrollArea
+        className="min-h-0 flex-1"
+        // horizontalScrollOffset={lineNumbersWidth}
+      >
+        <div className="grid min-h-full flex-1 grid-cols-[min-content_1fr_min-content_1fr] content-start">
+          {diff.rows.map((row, index) => (
+            <Fragment key={index}>
+              <div
+                className="bg-card text-muted-foreground sticky left-0 grid grid-cols-[1fr_1fr] gap-2 px-3 text-end font-mono text-sm leading-5 select-none"
+                // ref={index === 0 ? lineNumbersRef : undefined}
+              >
+                <span>{row.original.lineNumber}</span>
+              </div>
+              <pre
+                className={cn(
+                  'font-mono text-sm leading-5',
+                  props.diffSettings.wrapLines
+                    ? 'break-all whitespace-pre-wrap'
+                    : 'pr-10',
+                  row.original.type === '-' && 'text-term-red bg-term-red/5',
+                )}
+              >
+                {row.original.type} {row.original.text}
+              </pre>
+              <div
+                className="bg-card text-muted-foreground sticky left-0 grid grid-cols-[1fr_1fr] gap-2 px-3 text-end font-mono text-sm leading-5 select-none"
+                // ref={index === 0 ? lineNumbersRef : undefined}
+              >
+                <span>{row.modified.lineNumber}</span>
+              </div>
+              <pre
+                className={cn(
+                  'font-mono text-sm leading-5',
+                  props.diffSettings.wrapLines
+                    ? 'break-all whitespace-pre-wrap'
+                    : 'pr-10',
+                  row.modified.type === '+' &&
+                    'text-term-green bg-term-green/5',
+                )}
+              >
+                {row.modified.type} {row.modified.text}
               </pre>
             </Fragment>
           ))}
@@ -301,7 +520,6 @@ function DiffSettingsMenu(props: DiffSettingsMenuProps) {
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem
             value="split"
-            disabled
             onSelect={() => {
               props.setDiffSettings((prev) => ({
                 ...prev,
