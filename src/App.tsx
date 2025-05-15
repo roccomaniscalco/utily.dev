@@ -174,9 +174,9 @@ function computeSplitDiff(
     if (changeType === '+' && nextChangeType === '-') {
       for (let i = 0; i < numRows; i++) {
         const line = lines[i] ?? ''
-        const lineType = line ? '+' : ' '
+        const lineType = line === undefined ? ' ' : '+'
         const nextLine = nextChangeLines?.[i] ?? ''
-        const nextLineType = nextLine ? '-' : ' '
+        const nextLineType = nextLine === undefined ? ' ' : '-'
 
         splitDiff.rows.push({
           original: {
@@ -200,9 +200,9 @@ function computeSplitDiff(
     if (changeType === '-' && nextChangeType === '+') {
       for (let i = 0; i < numRows; i++) {
         const line = lines[i] ?? ''
-        const lineType = line ? '-' : ' '
+        const lineType = line === undefined ? ' ' : '-'
         const nextLine = nextChangeLines?.[i] ?? ''
-        const nextLineType = nextLine ? '+' : ' '
+        const nextLineType = nextLine === undefined ? ' ' : '+'
 
         splitDiff.rows.push({
           original: {
