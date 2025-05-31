@@ -7,7 +7,13 @@ import {
   SquareIcon,
   WrapTextIcon,
 } from 'lucide-react'
-import { Dispatch, Fragment, SetStateAction, useDeferredValue } from 'react'
+import {
+  Dispatch,
+  Fragment,
+  RefCallback,
+  SetStateAction,
+  useDeferredValue,
+} from 'react'
 import { Button } from '~/components/ui/button'
 import { Card, CardAction, CardHeader, CardTitle } from '~/components/ui/card'
 import {
@@ -28,7 +34,7 @@ import { ScrollArea } from '~/components/ui/scroll-area'
 import { Textarea } from '~/components/ui/textarea'
 import { cn } from '~/lib/utils'
 
-type Diff = {
+type UnifiedDiff = {
   added: number
   removed: number
   lines: {
@@ -49,7 +55,7 @@ function computeDiff(
     ignoreWhitespace: options?.ignoreWhitespace,
   })
 
-  const diff: Diff = {
+  const diff: UnifiedDiff = {
     added: 0,
     removed: 0,
     lines: [],
@@ -334,16 +340,10 @@ type ViewerProps = Readonly<{
   setDiffSettings: Dispatch<SetStateAction<DiffSettings>>
 }>
 function Viewer(props: ViewerProps) {
-  return {
-    unified: <UnifiedViewer {...props} />,
-    split: <SplitViewer {...props} />,
+  const diff = {
+    split: computeSplitDiff(props.originalText, props.modifiedText),
+    unified: computeDiff(props.originalText, props.modifiedText),
   }[props.diffSettings.displayMode]
-}
-
-function UnifiedViewer(props: ViewerProps) {
-  const diff = computeDiff(props.originalText, props.modifiedText, {
-    ignoreWhitespace: props.diffSettings.ignoreWhitespace,
-  })
 
   const [lineNumbersRef, { width: lineNumbersWidth }] = useMeasure()
 
@@ -367,104 +367,98 @@ function UnifiedViewer(props: ViewerProps) {
         className="min-h-0 flex-1"
         horizontalScrollOffset={lineNumbersWidth}
       >
-        <div className="grid min-h-full flex-1 grid-cols-[min-content_1fr] content-start">
-          {diff.lines.map((line, index) => (
-            <Fragment key={index}>
-              <div
-                className="bg-card text-muted-foreground sticky left-0 grid grid-cols-[1fr_1fr] gap-2 px-3 text-end font-mono text-sm leading-5 select-none"
-                ref={index === 0 ? lineNumbersRef : undefined}
-              >
-                <span>{line.originalLine}</span>
-                <span>{line.modifiedLine}</span>
-              </div>
-              <pre
-                className={cn(
-                  'font-mono text-sm leading-5',
-                  props.diffSettings.wrapLines
-                    ? 'break-all whitespace-pre-wrap'
-                    : 'pr-10',
-                  line.type === '+' && 'text-term-green bg-term-green/5',
-                  line.type === '-' && 'text-term-red bg-term-red/5',
-                )}
-              >
-                {line.type} {line.text}
-              </pre>
-            </Fragment>
-          ))}
-        </div>
+        {props.diffSettings.displayMode === 'split' ? (
+          <SplitView
+            splitDiff={diff as SplitDiff}
+            diffSettings={props.diffSettings}
+          />
+        ) : (
+          <UnifiedView
+            unifiedDiff={diff as UnifiedDiff}
+            diffSettings={props.diffSettings}
+            lineNumbersRef={lineNumbersRef}
+          />
+        )}
       </ScrollArea>
     </Card>
   )
 }
 
-function SplitViewer(props: ViewerProps) {
-  const diff = computeSplitDiff(props.originalText, props.modifiedText, {
-    ignoreWhitespace: props.diffSettings.ignoreWhitespace,
-  })
-
+type UnifiedViewProps = {
+  unifiedDiff: UnifiedDiff
+  diffSettings: DiffSettings
+  lineNumbersRef: RefCallback<Element>
+}
+function UnifiedView(props: UnifiedViewProps) {
   return (
-    <Card className="size-full">
-      <CardHeader>
-        <CardTitle>Difference</CardTitle>
-        <CardAction>
-          <div className="flex items-center gap-1.5 text-sm tabular-nums">
-            <p className="text-term-green">+{diff.added}</p>
-            <p className="text-muted-foreground">/</p>
-            <p className="text-term-red">-{diff.removed}</p>
+    <div className="grid min-h-full flex-1 grid-cols-[min-content_1fr] content-start">
+      {props.unifiedDiff.lines.map((line, index) => (
+        <Fragment key={index}>
+          <div
+            className="bg-card text-muted-foreground sticky left-0 grid grid-cols-[1fr_1fr] gap-2 px-3 text-end font-mono text-sm leading-5 select-none"
+            ref={index === 0 ? props.lineNumbersRef : undefined}
+          >
+            <span>{line.originalLine}</span>
+            <span>{line.modifiedLine}</span>
           </div>
-          <DiffSettingsMenu
-            diffSettings={props.diffSettings}
-            setDiffSettings={props.setDiffSettings}
-          />
-        </CardAction>
-      </CardHeader>
-      <ScrollArea
-        className="min-h-0 flex-1"
-        // horizontalScrollOffset={lineNumbersWidth}
-      >
-        <div className="grid min-h-full flex-1 grid-cols-[min-content_1fr_min-content_1fr] content-start">
-          {diff.rows.map((row, index) => (
-            <Fragment key={index}>
-              <div
-                className="bg-card text-muted-foreground sticky left-0 grid grid-cols-[1fr_1fr] gap-2 px-3 text-end font-mono text-sm leading-5 select-none"
-                // ref={index === 0 ? lineNumbersRef : undefined}
-              >
-                <span>{row.original.lineNumber}</span>
-              </div>
-              <pre
-                className={cn(
-                  'font-mono text-sm leading-5',
-                  props.diffSettings.wrapLines
-                    ? 'break-all whitespace-pre-wrap'
-                    : 'pr-10',
-                  row.original.type === '-' && 'text-term-red bg-term-red/5',
-                )}
-              >
-                {row.original.type} {row.original.text}
-              </pre>
-              <div
-                className="bg-card text-muted-foreground sticky left-0 grid grid-cols-[1fr_1fr] gap-2 px-3 text-end font-mono text-sm leading-5 select-none"
-                // ref={index === 0 ? lineNumbersRef : undefined}
-              >
-                <span>{row.modified.lineNumber}</span>
-              </div>
-              <pre
-                className={cn(
-                  'font-mono text-sm leading-5',
-                  props.diffSettings.wrapLines
-                    ? 'break-all whitespace-pre-wrap'
-                    : 'pr-10',
-                  row.modified.type === '+' &&
-                    'text-term-green bg-term-green/5',
-                )}
-              >
-                {row.modified.type} {row.modified.text}
-              </pre>
-            </Fragment>
-          ))}
-        </div>
-      </ScrollArea>
-    </Card>
+          <pre
+            className={cn(
+              'font-mono text-sm leading-5',
+              props.diffSettings.wrapLines
+                ? 'break-all whitespace-pre-wrap'
+                : 'pr-10',
+              line.type === '+' && 'text-term-green bg-term-green/5',
+              line.type === '-' && 'text-term-red bg-term-red/5',
+            )}
+          >
+            {line.type} {line.text}
+          </pre>
+        </Fragment>
+      ))}
+    </div>
+  )
+}
+
+type SplitViewProps = {
+  splitDiff: SplitDiff
+  diffSettings: DiffSettings
+}
+function SplitView(props: SplitViewProps) {
+  return (
+    <div className="grid min-h-full flex-1 grid-cols-[min-content_1fr_min-content_1fr] content-start">
+      {props.splitDiff.rows.map((row, index) => (
+        <Fragment key={index}>
+          <div className="bg-card text-muted-foreground px-3 text-end font-mono text-sm leading-5 select-none">
+            <span>{row.original.lineNumber}</span>
+          </div>
+          <pre
+            className={cn(
+              'font-mono text-sm leading-5',
+              props.diffSettings.wrapLines
+                ? 'break-all whitespace-pre-wrap'
+                : 'pr-10',
+              row.original.type === '-' && 'text-term-red bg-term-red/5',
+            )}
+          >
+            {row.original.type} {row.original.text}
+          </pre>
+          <div className="bg-card text-muted-foreground px-3 text-end font-mono text-sm leading-5 select-none">
+            <span>{row.modified.lineNumber}</span>
+          </div>
+          <pre
+            className={cn(
+              'font-mono text-sm leading-5',
+              props.diffSettings.wrapLines
+                ? 'break-all whitespace-pre-wrap'
+                : 'pr-10',
+              row.modified.type === '+' && 'text-term-green bg-term-green/5',
+            )}
+          >
+            {row.modified.type} {row.modified.text}
+          </pre>
+        </Fragment>
+      ))}
+    </div>
   )
 }
 
