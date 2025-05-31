@@ -180,9 +180,9 @@ function computeSplitDiff(
     if (changeType === '+' && nextChangeType === '-') {
       for (let i = 0; i < numRows; i++) {
         const line = lines[i] ?? ''
-        const lineType = line === undefined ? ' ' : '+'
+        const lineType = line ? '+' : ' '
         const nextLine = nextChangeLines?.[i] ?? ''
-        const nextLineType = nextLine === undefined ? ' ' : '-'
+        const nextLineType = nextLine ? '-' : ' '
 
         splitDiff.rows.push({
           original: {
@@ -206,9 +206,9 @@ function computeSplitDiff(
     if (changeType === '-' && nextChangeType === '+') {
       for (let i = 0; i < numRows; i++) {
         const line = lines[i] ?? ''
-        const lineType = line === undefined ? ' ' : '-'
+        const lineType = line ? '-' : ' '
         const nextLine = nextChangeLines?.[i] ?? ''
-        const nextLineType = nextLine === undefined ? ' ' : '+'
+        const nextLineType = nextLine ? '+' : ' '
 
         splitDiff.rows.push({
           original: {
@@ -433,7 +433,7 @@ function SplitView(props: SplitViewProps) {
           </div>
           <pre
             className={cn(
-              'font-mono text-sm leading-5 overflow-hidden',
+              'overflow-hidden font-mono text-sm leading-5',
               props.diffSettings.wrapLines
                 ? 'break-all whitespace-pre-wrap'
                 : 'pr-10',
@@ -447,7 +447,7 @@ function SplitView(props: SplitViewProps) {
           </div>
           <pre
             className={cn(
-              'font-mono text-sm leading-5 overflow-hidden',
+              'overflow-hidden font-mono text-sm leading-5',
               props.diffSettings.wrapLines
                 ? 'break-all whitespace-pre-wrap'
                 : 'pr-10',
