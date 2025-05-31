@@ -433,7 +433,7 @@ function SplitView(props: SplitViewProps) {
           </div>
           <pre
             className={cn(
-              'font-mono text-sm leading-5',
+              'font-mono text-sm leading-5 overflow-hidden',
               props.diffSettings.wrapLines
                 ? 'break-all whitespace-pre-wrap'
                 : 'pr-10',
@@ -447,7 +447,7 @@ function SplitView(props: SplitViewProps) {
           </div>
           <pre
             className={cn(
-              'font-mono text-sm leading-5',
+              'font-mono text-sm leading-5 overflow-hidden',
               props.diffSettings.wrapLines
                 ? 'break-all whitespace-pre-wrap'
                 : 'pr-10',
